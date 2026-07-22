@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Quiz Results</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0B0E58;
+  color: #ffffff;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+h1 {
+  font-family: 'Blinker', sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  margin: 0 0 32px 0;
+  text-align: center;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.stat-card {
+  background: #1a1d6b;
+  padding: 24px;
+  border-left: 4px solid #46CCFF;
+  border: 1px solid #2a2f7f;
+  border-left: 4px solid #46CCFF;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #7080b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-family: 'Blinker', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  color: #46CCFF;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a1d6b;
+}
+
+th {
+  background: #0B0E58;
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #2a2f7f;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid #2a2f7f;
+}
+
+tr:hover {
+  background: #252b7f;
+}
+
+.rank {
+  color: #46CCFF;
+  font-weight: 600;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: #7080b8;
+  font-size: 18px;
+}
+
+button {
+  background: #46CCFF;
+  color: #0B0E58;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Segoe UI', sans-serif;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 24px;
+  margin-right: 12px;
+}
+
+button:hover {
+  background: #6dd9ff;
+}
+
+.actions {
+  text-align: center;
+  margin-top: 32px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Quiz Results Dashboard</h1>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Groups Completed</div>
+      <div class="stat-value" id="totalGroups">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average Score</div>
+      <div class="stat-value" id="avgScore">0%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Highest Score</div>
+      <div class="stat-value" id="highScore">0/15</div>
+    </div>
+  </div>
+
+  <table id="resultsTable" style="display: none;">
+    <thead>
+      <tr>
+        <th style="width: 40px;">Rank</th>
+        <th>Group Name</th>
+        <th style="width: 100px;">Score</th>
+        <th style="width: 120px;">Percentage</th>
+        <th style="width: 180px;">Submitted</th>
+      </tr>
+    </thead>
+    <tbody id="resultsBody">
+    </tbody>
+  </table>
+
+  <div id="emptyState" class="empty">
+    No quiz responses yet. Scores will appear here as groups complete the quiz.
+  </div>
+
+  <div class="actions">
+    <button onclick="refreshResults()">Refresh Results</button>
+    <button onclick="exportToCSV()" style="background: #46CCFF;">Export to CSV</button>
+    <button onclick="clearAllResults()" style="background: #E43A3A; color: #fff;">Clear All Results</button>
+  </div>
+</div>
+
+<script>
+function loadResults() {
+  const results = JSON.parse(localStorage.getItem('quizResults') || '[]');
+  const sorted = results.sort((a, b) => b.score - a.score || b.percentage - a.percentage);
+  
+  document.getElementById('totalGroups').textContent = results.length;
+  
+  if (results.length === 0) {
+    document.getElementById('resultsTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('avgScore').textContent = '0%';
+    document.getElementById('highScore').textContent = '0/15';
+    return;
+  }
+
+  const avgPercentage = Math.round(results.reduce((sum, r) => sum + r.percentage, 0) / results.length);
+  const highScore = sorted[0];
+  
+  document.getElementById('avgScore').textContent = avgPercentage + '%';
+  document.getElementById('highScore').textContent = highScore.score + '/15';
+  
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsTable').style.display = 'table';
+  
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML = '';
+  
+  sorted.forEach((result, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="rank">${index + 1}</td>
+      <td>${result.groupName}</td>
+      <td><strong>${result.score}/15</strong></td>
+      <td><strong style="color: #46CCFF;">${result.percentage}%</strong></td>
+      <td style="font-size: 12px; color: #7080b8;">${result.timestamp}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function refreshResults() {
+  loadResults();
+}
+
+function exportToCSV() {
+  const results = JSON.parse(localStorage.getItem('quizResults') || '[]');
+  if (results.length === 0) {
+    alert('No results to export');
+    return;
+  }
+  
+  const headers = ['Rank', 'Group Name', 'Score', 'Percentage', 'Submitted'];
+  const sorted = results.sort((a, b) => b.score - a.score || b.percentage - a.percentage);
+  
+  let csv = headers.join(',') + '\n';
+  sorted.forEach((result, index) => {
+    csv += `${index + 1},"${result.groupName}",${result.score}/15,${result.percentage}%,"${result.timestamp}"\n`;
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `quiz-results-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function clearAllResults() {
+  if (confirm('Are you sure? This will delete all quiz results.')) {
+    localStorage.removeItem('quizResults');
+    loadResults();
+  }
+}
+
+setInterval(loadResults, 5000);
+loadResults();
+</script>
+</body>
+</html>
