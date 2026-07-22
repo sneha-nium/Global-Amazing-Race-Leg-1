@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Global Amazing Race - Leg 1 Quiz (Just for Fun)</title>
+<style>
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+body { background: #0B0E58; color: #FFFFFF; font-family: 'Segoe UI', Arial, sans-serif; }
+* { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="app" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 24px; position: relative; overflow: hidden;">
+  <div style="position:absolute; top:-40px; right:-60px; width:320px; height:320px; border-radius:50%; background:#3D2080; opacity:0.35; pointer-events:none;"></div>
+  <div style="width: 100%; max-width: 600px; position: relative; z-index: 1;">
+
+    <div id="screen-start" style="display: block;">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <p style="font-size: 16px; font-weight: 700; letter-spacing: 1px; margin: 0 0 16px 0; color: #46CCFF; text-transform: uppercase;">Leg 1 Trivia - Open Challenge</p>
+        <h1 style="font-weight: 700; font-size: 44px; margin: 0 0 24px 0; line-height: 1.1;">Know Your <span style="color:#46CCFF;">Nium</span></h1>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0;">Nium Global Amazing Race - just for fun, open to everyone</p>
+      </div>
+      <div style="background: #151A6E; padding: 32px; margin-bottom: 24px; border-radius: 12px; border: 1px solid #2A2F8C;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #46CCFF;">Your Name</label>
+        <input id="nameInput" type="text" placeholder="e.g. Priya Sharma" style="width: 100%; padding: 12px; background: #0B0E58; border: 1px solid #46CCFF; border-radius: 6px; color: #fff; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; outline: none; margin-bottom: 24px; box-sizing: border-box;">
+        <p style="font-size: 13px; color: #9AA0D9; margin: 0 0 24px 0;">15 questions - Mix of multiple choice and true/false - 1 point each. This is just for fun and doesn't affect the official race standings.</p>
+        <button id="startBtn" disabled style="width: 100%; padding: 14px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Start Quiz</button>
+      </div>
+    </div>
+
+    <div id="screen-quiz" style="display: none;">
+      <div style="margin-bottom: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 22px; font-weight: 700; margin: 0;">Question <span id="qNum" style="color:#46CCFF;">1</span> of 15</h2>
+        </div>
+        <div style="width: 100%; height: 6px; background: #2A2F8C; margin-bottom: 32px; border-radius: 3px;">
+          <div id="progressBar" style="height: 100%; background: #46CCFF; width: 6.67%; transition: width 0.3s; border-radius: 3px;"></div>
+        </div>
+        <h3 id="questionText" style="font-size: 20px; font-weight: 500; margin: 0 0 24px 0; line-height: 1.4;"></h3>
+        <div id="optionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <button id="nextBtn" disabled style="width: 100%; padding: 14px; margin-top: 32px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Next Question</button>
+      </div>
+    </div>
+
+    <div id="screen-results" style="display: none;">
+      <div style="text-align: center;">
+        <h2 style="font-weight: 700; font-size: 38px; margin: 0 0 16px 0;">Quiz Complete!</h2>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0 0 48px 0;" id="teamDisplay"></p>
+        <div style="background: #151A6E; padding: 48px 32px; margin-bottom: 32px; border-left: 4px solid #46CCFF; border-radius: 12px;">
+          <div style="font-size: 13px; color: #9AA0D9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700;">Final Score</div>
+          <div style="font-weight: 700; font-size: 64px; margin: 0; color: #46CCFF;"><span id="finalScore">0</span>/15</div>
+          <div style="font-size: 18px; color: #C9CCEF; margin-top: 16px;"><span id="finalPercent">0</span>%</div>
+        </div>
+        <p id="submitStatus" style="font-size: 14px; color: #9AA0D9; margin-top: 32px;">Saving your score...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// >>> PASTE YOUR DEPLOYED APPS SCRIPT WEB APP URL HERE (ends in /exec) <<<
+// Same backend/Sheet as the competitive quiz - entries here are tagged as
+// "Just for Fun - Not on a Team" so they never overwrite an official team's score.
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyMhmt3uCKcQWn-cU9CQo0fX6XfL9Ke3iKzM9moXBjKXAkg8BIWegpslhQHGno0q7ThlA/exec";
+const FUN_TEAM_LABEL = "Just for Fun - Not on a Team";
+
+const questions = [
+  { question: 'In what year did Nium originally launch, as Instarem?', options: ['2010', '2014', '2017', '2019'], correct: '2014' },
+  { question: "What was Nium's original brand name before it became Nium?", options: ['PayGlobal', 'Instarem', 'RemitEasy', 'CardNium'], correct: 'Instarem' },
+  { question: 'In what year did the company rebrand from Instarem to Nium?', options: ['2016', '2018', '2019', '2021'], correct: '2019' },
+  { question: "'Nium' comes from a Sanskrit word meaning...", options: ['Speed and trust', 'Rules and principles', 'Global connection', 'Money and value'], correct: 'Rules and principles' },
+  { question: 'Where is Nium headquartered?', options: ['Singapore only', 'San Francisco only', 'Dual headquartered - Singapore + San Francisco', 'London'], correct: 'Dual headquartered - Singapore + San Francisco' },
+  { question: "Roughly how many countries can Nium's platform reach today?", options: ['50+', '100+', '190+', '250+'], correct: '190+' },
+  { question: 'Roughly how many currencies does Nium support?', options: ['25+', '50+', '100+', '150+'], correct: '100+' },
+  { question: 'True or False: Instarem still exists today as a consumer brand owned by Nium.', options: ['True', 'False'], correct: 'True' },
+  { question: "Which of these is one of Nium's three core company values?", options: ['Move Fast and Break Things', 'Win It Together', 'Customer Obsession', 'Think Big'], correct: 'Win It Together' },
+  { question: 'Name all three of Nium\'s core company values (type them, comma-separated).', options: null, correct: null, isText: true },
+  { question: "True or False: Women @ Nium is an employee resource group focused on empowering women's personal and professional growth.", options: ['True', 'False'], correct: 'True' },
+  { question: 'Roughly how many new Niumers have joined the company so far in 2026 (as of mid-July)?', options: ['90', '130', '168', '220'], correct: '168' },
+  { question: "Who is Nium's Co-Founder and CEO?", options: ['Prajit Nanu', 'Michael Bermingham', 'Anupam Pahuja', 'Pratik Gandhi'], correct: 'Prajit Nanu' },
+  { question: "True or False: Nium became Southeast Asia's first B2B fintech 'unicorn' (valued over $1 billion) in 2021.", options: ['True', 'False'], correct: 'True' },
+  { question: "Roughly how many cards has Nium's virtual credit/debit card business issued to date?", options: ['5 million+', '15 million+', '30 million+', '50 million+'], correct: '30 million+' }
+];
+
+let state = { currentQuestion: 0, selectedAnswer: null, score: 0, participantName: '' };
+
+function showScreen(screen) {
+  document.getElementById('screen-start').style.display = screen === 'start' ? 'block' : 'none';
+  document.getElementById('screen-quiz').style.display = screen === 'quiz' ? 'block' : 'none';
+  document.getElementById('screen-results').style.display = screen === 'results' ? 'block' : 'none';
+}
+
+function updateQuizUI() {
+  const q = questions[state.currentQuestion];
+  document.getElementById('questionText').textContent = q.question;
+  document.getElementById('qNum').textContent = state.currentQuestion + 1;
+  document.getElementById('progressBar').style.width = ((state.currentQuestion + 1) / 15 * 100) + '%';
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+
+  if (q.isText) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'textAnswer';
+    input.placeholder = 'Type your answer here';
+    input.value = state.selectedAnswer || '';
+    input.style.cssText = 'padding: 14px; background: #151A6E; color: #fff; border: 1px solid #46CCFF; border-radius: 6px; font-size: 16px; font-family: "Segoe UI", Arial, sans-serif; width: 100%;';
+    input.oninput = () => {
+      // Update state directly without re-rendering the box - rebuilding the
+      // DOM on every keystroke was destroying and recreating this input,
+      // which threw focus out of the field after each letter typed.
+      state.selectedAnswer = input.value.trim();
+      const hasAnswer = state.selectedAnswer.length > 0;
+      const nextBtn = document.getElementById('nextBtn');
+      nextBtn.disabled = !hasAnswer;
+      nextBtn.style.background = hasAnswer ? '#46CCFF' : '#333A8C';
+      nextBtn.style.color = hasAnswer ? '#0B0E58' : '#8890C9';
+      nextBtn.style.cursor = hasAnswer ? 'pointer' : 'not-allowed';
+    };
+    container.appendChild(input);
+  } else {
+    q.options.forEach(option => {
+      const btn = document.createElement('button');
+      btn.textContent = option;
+      const selected = state.selectedAnswer === option;
+      btn.style.cssText = `padding: 14px; background: ${selected ? '#46CCFF' : '#151A6E'}; color: ${selected ? '#0B0E58' : '#fff'}; border: 1px solid ${selected ? '#46CCFF' : '#2A2F8C'}; border-radius: 6px; text-align: left; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; cursor: pointer; transition: all 0.2s; font-weight: ${selected ? '700' : '400'};`;
+      btn.onclick = () => selectAnswer(option);
+      container.appendChild(btn);
+    });
+  }
+
+  const nextBtn = document.getElementById('nextBtn');
+  const hasAnswer = q.isText ? !!(state.selectedAnswer && state.selectedAnswer.length > 0) : !!state.selectedAnswer;
+  nextBtn.disabled = !hasAnswer;
+  nextBtn.style.background = hasAnswer ? '#46CCFF' : '#333A8C';
+  nextBtn.style.color = hasAnswer ? '#0B0E58' : '#8890C9';
+  nextBtn.style.cursor = hasAnswer ? 'pointer' : 'not-allowed';
+  nextBtn.textContent = state.currentQuestion === 14 ? 'Finish Quiz' : 'Next Question';
+}
+
+function selectAnswer(option) {
+  state.selectedAnswer = option;
+  updateQuizUI();
+}
+
+function startQuiz() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+
+  const submittedNames = JSON.parse(localStorage.getItem('nium_leg1_fun_submitted_names') || '[]');
+  if (submittedNames.includes(name)) {
+    if (!confirm(name + ' already submitted from this browser. Submit again anyway?')) return;
+  }
+
+  state.participantName = name;
+  state.currentQuestion = 0;
+  state.selectedAnswer = null;
+  state.score = 0;
+  showScreen('quiz');
+  updateQuizUI();
+}
+
+function nextQuestion() {
+  const q = questions[state.currentQuestion];
+  const isCorrect = q.isText
+    ? String(state.selectedAnswer || '').toLowerCase().includes('keep it simple')
+      && String(state.selectedAnswer || '').toLowerCase().includes('make it better')
+      && String(state.selectedAnswer || '').toLowerCase().includes('win it together')
+    : state.selectedAnswer === q.correct;
+  if (isCorrect) state.score++;
+
+  if (state.currentQuestion === 14) {
+    showResults();
+  } else {
+    state.currentQuestion++;
+    state.selectedAnswer = null;
+    updateQuizUI();
+  }
+}
+
+async function showResults() {
+  document.getElementById('teamDisplay').textContent = state.participantName;
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalPercent').textContent = Math.round(state.score / 15 * 100);
+  showScreen('results');
+  await sendResultsToServer(state.participantName, state.score);
+}
+
+async function sendResultsToServer(participantName, score) {
+  const percentage = Math.round(score / 15 * 100);
+  const statusEl = document.getElementById('submitStatus');
+
+  const submittedNames = JSON.parse(localStorage.getItem('nium_leg1_fun_submitted_names') || '[]');
+  if (!submittedNames.includes(participantName)) {
+    submittedNames.push(participantName);
+    localStorage.setItem('nium_leg1_fun_submitted_names', JSON.stringify(submittedNames));
+  }
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    statusEl.textContent = 'Score not saved centrally yet - backend link not configured. Contact your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    return;
+  }
+
+  try {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ teamName: FUN_TEAM_LABEL, score, percentage, participantName })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      statusEl.textContent = 'Score saved! Thanks for playing.';
+      statusEl.style.color = '#46CCFF';
+    } else {
+      throw new Error(data.message || 'unknown error');
+    }
+  } catch (err) {
+    statusEl.textContent = 'Could not save your score centrally (' + err.message + '). Please screenshot this page and send it to your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    console.error('Submission failed:', err);
+  }
+}
+
+document.getElementById('startBtn').onclick = startQuiz;
+document.getElementById('nextBtn').onclick = nextQuestion;
+document.getElementById('nameInput').oninput = () => {
+  const btn = document.getElementById('startBtn');
+  const hasName = !!document.getElementById('nameInput').value.trim();
+  btn.disabled = !hasName;
+  btn.style.background = hasName ? '#46CCFF' : '#333A8C';
+  btn.style.color = hasName ? '#0B0E58' : '#8890C9';
+  btn.style.cursor = hasName ? 'pointer' : 'not-allowed';
+};
+
+showScreen('start');
+</script>
+</body>
+</html>
