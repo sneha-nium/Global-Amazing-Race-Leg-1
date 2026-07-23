@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Global Amazing Race - Live Standings</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #FFFFFF; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 32px 24px; }
+* { box-sizing: border-box; }
+.header { text-align: center; margin-bottom: 8px; }
+h1 { color: #0B0E58; font-weight: 700; font-size: 32px; margin: 0 0 6px 0; }
+.subtitle { color: #666666; font-size: 15px; margin: 0 0 32px 0; text-align: center; }
+.wrap { max-width: 900px; margin: 0 auto; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+th { background: #0B0E58; color: #FFFFFF; text-align: center; padding: 12px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+th.team-col { text-align: left; padding-left: 16px; }
+td { padding: 12px 10px; font-size: 15px; border-bottom: 1px solid #EDEDED; text-align: center; }
+td.team-col { text-align: left; padding-left: 16px; font-weight: 600; color: #0B0E58; }
+tr:nth-child(even) td { background: #F8F9FD; }
+.rank { font-weight: 700; width: 40px; color: #0B0E58; }
+.rank-1 { color: #F7246C; font-size: 17px; }
+.rank-2 { color: #7461D4; font-size: 16px; }
+.rank-3 { color: #46CCFF; font-size: 16px; }
+.total-cell { font-weight: 700; color: #0B0E58; font-size: 16px; }
+.pending { color: #BBBBBB; }
+.empty { color: #666666; font-size: 14px; padding: 24px; background: #F5F5F5; text-align: center; border-radius: 6px; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+.refresh-note { font-size: 12px; color: #999999; text-align: center; }
+.legend { text-align: center; font-size: 13px; color: #666666; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <h1>🏁 Nium Global Amazing Race — Live Standings</h1>
+  </div>
+  <p class="subtitle">Team scores across all 5 legs, updated as each leg wraps and is scored.</p>
+
+  <div id="error-container"></div>
+
+  <div id="standings-container"></div>
+
+  <p class="legend">"-" means that leg hasn't been scored yet. Total updates automatically as new legs are added.</p>
+  <p class="refresh-note" id="refreshNote"></p>
+</div>
+
+<script>
+// >>> Same backend as the Leg 1 quiz, reading the "Standings" tab via ?type=standings <<<
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyMhmt3uCKcQWn-cU9CQo0fX6XfL9Ke3iKzM9moXBjKXAkg8BIWegpslhQHGno0q7ThlA/exec";
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function cell(v) {
+  if (v === '' || v === null || v === undefined) return '<span class="pending">-</span>';
+  return esc(v);
+}
+
+function numOrZero(v) {
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
+async function loadStandings() {
+  const errorContainer = document.getElementById('error-container');
+  errorContainer.innerHTML = '';
+
+  try {
+    const res = await fetch(WEBAPP_URL + '?type=standings');
+    const data = await res.json();
+
+    if (data.error) {
+      errorContainer.innerHTML = '<div class="error">' + esc(data.error) + '</div>';
+    }
+
+    const teams = (data.standings || []).map(r => ({
+      team: r.team,
+      legs: [r.leg1, r.leg2, r.leg3, r.leg4, r.leg5],
+      total: numOrZero(r.leg1) + numOrZero(r.leg2) + numOrZero(r.leg3) + numOrZero(r.leg4) + numOrZero(r.leg5)
+    })).sort((a, b) => b.total - a.total);
+
+    if (teams.length === 0) {
+      document.getElementById('standings-container').innerHTML = '<div class="empty">Standings will appear here once Leg 1 results are in.</div>';
+    } else {
+      let html = '<table><thead><tr><th class="rank">#</th><th class="team-col">Team</th><th>Leg 1</th><th>Leg 2</th><th>Leg 3</th><th>Leg 4</th><th>Leg 5</th><th>Total</th></tr></thead><tbody>';
+      teams.forEach((r, i) => {
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+        const medal = i === 0 ? ' 🥇' : i === 1 ? ' 🥈' : i === 2 ? ' 🥉' : '';
+        html += `<tr><td class="rank ${rankClass}">${i+1}${medal}</td><td class="team-col">${esc(r.team)}</td>` +
+          r.legs.map(v => `<td>${cell(v)}</td>`).join('') +
+          `<td class="total-cell">${r.total}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById('standings-container').innerHTML = html;
+    }
+
+    document.getElementById('refreshNote').textContent = 'Last updated: ' + new Date().toLocaleString();
+  } catch (err) {
+    errorContainer.innerHTML = '<div class="error">Could not load standings: ' + esc(err.message) + '</div>';
+  }
+}
+
+loadStandings();
+setInterval(loadStandings, 60000);
+</script>
+</body>
+</html>
