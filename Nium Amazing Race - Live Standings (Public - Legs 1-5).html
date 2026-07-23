@@ -69,18 +69,34 @@ async function loadStandings() {
   errorContainer.innerHTML = '';
 
   try {
-    const res = await fetch(WEBAPP_URL + '?type=standings');
-    const data = await res.json();
+    // Fetch standings (totals) and the Leg 1 responses feed (for submission timestamps)
+    // in parallel - the Standings tab only has final scores, no timing, so ties would
+    // otherwise fall back to sheet row order instead of the documented tie-break rule
+    // (earliest submission wins). Once more legs have their own timing data this can be
+    // extended; for now Leg 1's timestamp is the best available tie-break signal.
+    const [standingsRes, responsesRes] = await Promise.all([
+      fetch(WEBAPP_URL + '?type=standings'),
+      fetch(WEBAPP_URL)
+    ]);
+    const data = await standingsRes.json();
+    const responseData = await responsesRes.json();
 
     if (data.error) {
       errorContainer.innerHTML = '<div class="error">' + esc(data.error) + '</div>';
     }
 
+    const earliestByTeam = {};
+    (responseData.results || []).forEach(r => {
+      const t = new Date(r.timestamp).getTime();
+      if (!earliestByTeam[r.teamName] || t < earliestByTeam[r.teamName]) earliestByTeam[r.teamName] = t;
+    });
+
     const teams = (data.standings || []).map(r => ({
       team: r.team,
       legs: [r.leg1, r.leg2, r.leg3, r.leg4, r.leg5],
-      total: numOrZero(r.leg1) + numOrZero(r.leg2) + numOrZero(r.leg3) + numOrZero(r.leg4) + numOrZero(r.leg5)
-    })).sort((a, b) => b.total - a.total);
+      total: numOrZero(r.leg1) + numOrZero(r.leg2) + numOrZero(r.leg3) + numOrZero(r.leg4) + numOrZero(r.leg5),
+      earliest: earliestByTeam[r.team] !== undefined ? earliestByTeam[r.team] : Infinity
+    })).sort((a, b) => b.total - a.total || a.earliest - b.earliest);
 
     if (teams.length === 0) {
       document.getElementById('standings-container').innerHTML = '<div class="empty">Standings will appear here once Leg 1 results are in.</div>';
