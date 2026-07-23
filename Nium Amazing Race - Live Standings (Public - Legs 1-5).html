@@ -64,32 +64,49 @@ function numOrZero(v) {
   return isNaN(n) ? 0 : n;
 }
 
+// Apps Script can occasionally be slow/flaky on the very first hit after a fresh
+// deployment - one silent retry after a short pause avoids a false "failed to load"
+// on an otherwise-working backend.
+async function fetchWithRetry(url, retries = 1, delayMs = 1500) {
+  try {
+    return await fetch(url);
+  } catch (err) {
+    if (retries <= 0) throw err;
+    await new Promise(r => setTimeout(r, delayMs));
+    return fetchWithRetry(url, retries - 1, delayMs);
+  }
+}
+
 async function loadStandings() {
   const errorContainer = document.getElementById('error-container');
   errorContainer.innerHTML = '';
 
   try {
-    // Fetch standings (totals) and the Leg 1 responses feed (for submission timestamps)
-    // in parallel - the Standings tab only has final scores, no timing, so ties would
-    // otherwise fall back to sheet row order instead of the documented tie-break rule
-    // (earliest submission wins). Once more legs have their own timing data this can be
-    // extended; for now Leg 1's timestamp is the best available tie-break signal.
-    const [standingsRes, responsesRes] = await Promise.all([
-      fetch(WEBAPP_URL + '?type=standings'),
-      fetch(WEBAPP_URL)
-    ]);
+    // Standings (totals) is the critical fetch - the page must render even if anything
+    // else fails, so this one is NOT bundled with the timestamp lookup below.
+    const standingsRes = await fetchWithRetry(WEBAPP_URL + '?type=standings');
     const data = await standingsRes.json();
-    const responseData = await responsesRes.json();
 
     if (data.error) {
       errorContainer.innerHTML = '<div class="error">' + esc(data.error) + '</div>';
     }
 
+    // Best-effort second fetch for Leg 1 submission timestamps (used only to break ties
+    // per the documented rule: earliest submission wins). The Standings tab has no timing
+    // data of its own. This fetch is intentionally isolated in its own try/catch - if it's
+    // slow, blocked, or fails for any reason, the standings table still renders using
+    // whatever order is available rather than the whole page going blank.
     const earliestByTeam = {};
-    (responseData.results || []).forEach(r => {
-      const t = new Date(r.timestamp).getTime();
-      if (!earliestByTeam[r.teamName] || t < earliestByTeam[r.teamName]) earliestByTeam[r.teamName] = t;
-    });
+    try {
+      const responsesRes = await fetch(WEBAPP_URL);
+      const responseData = await responsesRes.json();
+      (responseData.results || []).forEach(r => {
+        const t = new Date(r.timestamp).getTime();
+        if (!earliestByTeam[r.teamName] || t < earliestByTeam[r.teamName]) earliestByTeam[r.teamName] = t;
+      });
+    } catch (tieBreakErr) {
+      console.warn('Tie-break timestamp fetch failed - showing standings without it:', tieBreakErr);
+    }
 
     const teams = (data.standings || []).map(r => ({
       team: r.team,
@@ -115,7 +132,7 @@ async function loadStandings() {
 
     document.getElementById('refreshNote').textContent = 'Last updated: ' + new Date().toLocaleString();
   } catch (err) {
-    errorContainer.innerHTML = '<div class="error">Could not load standings: ' + esc(err.message) + '</div>';
+    errorContainer.innerHTML = '<div class="error">Could not load standings right now (' + esc(err.message) + '). This page retries automatically every minute - or <a href="#" onclick="loadStandings(); return false;" style="color:#B00030; text-decoration: underline;">click here to retry now</a>.</div>';
   }
 }
 
