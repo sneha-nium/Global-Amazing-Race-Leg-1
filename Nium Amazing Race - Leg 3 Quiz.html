@@ -1,0 +1,92 @@
+// === Nium Global Amazing Race - Leg 1 Quiz Backend ===
+// Paste this whole file into Extensions > Apps Script on a NEW Google Sheet.
+// Deploy as a Web App (Execute as: Me, Who has access: Anyone).
+
+// Sheet name for a given leg's raw responses. Leg 1 keeps using the original
+// 'Responses' tab (untouched, so historical data/links don't break). Any other
+// leg gets its own tab in the SAME spreadsheet, named 'Leg<N> Responses' -
+// created automatically the first time that leg's quiz submits a score.
+function responsesSheetName(legParam) {
+  if (legParam === 3 || legParam === '3') return 'Leg3 Responses';
+  return 'Responses';
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetName = responsesSheetName(data.leg);
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['Timestamp', 'Team Name', 'Score', 'Percentage', 'Participant Name']);
+    } else if (sheet.getRange(1, 5).getValue() === '') {
+      // Existing sheet from before the Participant Name column existed - backfill just the
+      // header cell so old rows are untouched and new rows line up correctly.
+      sheet.getRange(1, 5).setValue('Participant Name');
+    }
+
+    sheet.appendRow([new Date(), data.teamName, data.score, data.percentage, data.participantName || '']);
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  // ?type=standings serves the public, all-5-legs standings feed (Standings tab).
+  if (e && e.parameter && e.parameter.type === 'standings') {
+    return getStandings();
+  }
+
+  // ?leg=3 reads Leg 3's own tab; no param (default) keeps the existing private
+  // Leg 1 quiz-responses feed working exactly as before, for the private dashboard.
+  var legParam = e && e.parameter && e.parameter.leg;
+  var sheetName = responsesSheetName(legParam);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName)
+    || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var values = sheet.getDataRange().getValues();
+  var rows = [];
+  for (var i = 1; i < values.length; i++) {
+    rows.push({
+      timestamp: values[i][0],
+      teamName: values[i][1],
+      score: values[i][2],
+      percentage: values[i][3],
+      participantName: values[i][4] || ''
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ results: rows }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getStandings() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Standings');
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify({ standings: [], error: 'No Standings tab found yet.' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  var values = sheet.getDataRange().getValues();
+  var rows = [];
+  // Expected columns: Team Name | Leg 1 | Leg 2 | Leg 3 | Leg 4 | Leg 5
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    if (!row[0]) continue;
+    rows.push({
+      team: row[0],
+      leg1: row[1], leg2: row[2], leg3: row[3], leg4: row[4], leg5: row[5]
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ standings: rows }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
