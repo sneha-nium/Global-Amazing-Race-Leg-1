@@ -1,92 +1,229 @@
-// === Nium Global Amazing Race - Leg 1 Quiz Backend ===
-// Paste this whole file into Extensions > Apps Script on a NEW Google Sheet.
-// Deploy as a Web App (Execute as: Me, Who has access: Anyone).
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Global Amazing Race - Leg 3 Quiz</title>
+<style>
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+body { background: #0B0E58; color: #FFFFFF; font-family: 'Segoe UI', Arial, sans-serif; }
+* { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="app" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 24px; position: relative; overflow: hidden;">
+  <div style="position:absolute; top:-40px; right:-60px; width:320px; height:320px; border-radius:50%; background:#3D2080; opacity:0.35; pointer-events:none;"></div>
+  <div style="width: 100%; max-width: 600px; position: relative; z-index: 1;">
 
-// Sheet name for a given leg's raw responses. Leg 1 keeps using the original
-// 'Responses' tab (untouched, so historical data/links don't break). Any other
-// leg gets its own tab in the SAME spreadsheet, named 'Leg<N> Responses' -
-// created automatically the first time that leg's quiz submits a score.
-function responsesSheetName(legParam) {
-  if (legParam === 3 || legParam === '3') return 'Leg3 Responses';
-  return 'Responses';
+    <div id="screen-start" style="display: block;">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <p style="font-size: 16px; font-weight: 700; letter-spacing: 1px; margin: 0 0 16px 0; color: #46CCFF; text-transform: uppercase;">Leg 3: Culture &amp; Geography Challenge</p>
+        <h1 style="font-weight: 700; font-size: 44px; margin: 0 0 24px 0; line-height: 1.1;">Know the <span style="color:#46CCFF;">World</span></h1>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0;">Nium Global Amazing Race</p>
+      </div>
+      <div style="background: #151A6E; padding: 32px; margin-bottom: 24px; border-radius: 12px; border: 1px solid #2A2F8C;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #46CCFF;">Select Your Group</label>
+        <select id="groupSelect" style="width: 100%; padding: 12px; background: #0B0E58; border: 1px solid #46CCFF; border-radius: 6px; color: #fff; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; outline: none; margin-bottom: 24px;">
+          <option value="">-- Choose your group --</option>
+          <option value="Group 1 - Mindful Navigators">Group 1 - Mindful Navigators</option>
+          <option value="Group 2 - Fast &amp; Curious">Group 2 - Fast &amp; Curious</option>
+          <option value="Group 3 - The Borderless Brigade">Group 3 - The Borderless Brigade</option>
+          <option value="Group 4 - Skywalkers">Group 4 - Skywalkers</option>
+          <option value="Group 5 - NextGen Ninjas">Group 5 - NextGen Ninjas</option>
+          <option value="Group 6 - Team Nexus">Group 6 - Team Nexus</option>
+          <option value="Group 7 - The Nium Hokages">Group 7 - The Nium Hokages</option>
+          <option value="Group 8 - We Need Therapy">Group 8 - We Need Therapy</option>
+          <option value="Group 9 - Smartinis">Group 9 - Smartinis</option>
+          <option value="Group 10 - Innov Agents">Group 10 - Innov Agents</option>
+          <option value="Group 11 - Beyond Borders">Group 11 - Beyond Borders</option>
+          <option value="Group 12 - High Five">Group 12 - High Five</option>
+          <option value="Group 13 - The Matrix Minds">Group 13 - The Matrix Minds</option>
+        </select>
+        <p style="font-size: 13px; color: #9AA0D9; margin: 0 0 24px 0;">15 questions - Mix of multiple choice and true/false - 1 point each. First 3 teams to submit earn a speed bonus!</p>
+        <button id="startBtn" disabled style="width: 100%; padding: 14px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Start Quiz</button>
+      </div>
+    </div>
+
+    <div id="screen-quiz" style="display: none;">
+      <div style="margin-bottom: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 22px; font-weight: 700; margin: 0;">Question <span id="qNum" style="color:#46CCFF;">1</span> of 15</h2>
+        </div>
+        <div style="width: 100%; height: 6px; background: #2A2F8C; margin-bottom: 32px; border-radius: 3px;">
+          <div id="progressBar" style="height: 100%; background: #46CCFF; width: 6.67%; transition: width 0.3s; border-radius: 3px;"></div>
+        </div>
+        <h3 id="questionText" style="font-size: 20px; font-weight: 500; margin: 0 0 24px 0; line-height: 1.4;"></h3>
+        <div id="optionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <button id="nextBtn" disabled style="width: 100%; padding: 14px; margin-top: 32px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Next Question</button>
+      </div>
+    </div>
+
+    <div id="screen-results" style="display: none;">
+      <div style="text-align: center;">
+        <h2 style="font-weight: 700; font-size: 38px; margin: 0 0 16px 0;">Quiz Complete!</h2>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0 0 48px 0;" id="teamDisplay"></p>
+        <div style="background: #151A6E; padding: 48px 32px; margin-bottom: 32px; border-left: 4px solid #46CCFF; border-radius: 12px;">
+          <div style="font-size: 13px; color: #9AA0D9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700;">Final Score</div>
+          <div style="font-weight: 700; font-size: 64px; margin: 0; color: #46CCFF;"><span id="finalScore">0</span>/15</div>
+          <div style="font-size: 18px; color: #C9CCEF; margin-top: 16px;"><span id="finalPercent">0</span>%</div>
+        </div>
+        <p id="submitStatus" style="font-size: 14px; color: #9AA0D9; margin-top: 32px;">Saving your score...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Same Web App URL as Leg 1 - one Google Sheet, one deployment. The "leg: 3" field
+// in the submit payload below tells the script to write into the "Leg3 Responses"
+// tab instead of Leg 1's "Responses" tab, so the two legs' data stay separate.
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyMhmt3uCKcQWn-cU9CQo0fX6XfL9Ke3iKzM9moXBjKXAkg8BIWegpslhQHGno0q7ThlA/exec";
+
+const questions = [
+  { question: 'Roughly how many countries does Nium have an office or registered site presence in today?', options: ['19', '23', '27', '34'], correct: '27' },
+  { question: 'What is the smallest country in the world by land area?', options: ['Monaco', 'Vatican City', 'San Marino', 'Liechtenstein'], correct: 'Vatican City' },
+  { question: 'How many continents does Nium do business in today?', options: ['4', '5', '6', '7'], correct: '6' },
+  { question: 'Which is the largest country in the world by land area?', options: ['Russia', 'Canada', 'China', 'USA'], correct: 'Russia' },
+  { question: 'Which of these cities lies in the Southern Hemisphere?', options: ['Sao Paulo', 'Toronto', 'London', 'Tokyo'], correct: 'Sao Paulo' },
+  { question: 'Which of these countries is part of Nium\'s global footprint?', options: ['Vietnam', 'Republic of Korea', 'Portugal', 'Argentina'], correct: 'Republic of Korea' },
+  { question: 'Which desert is the largest hot desert in the world?', options: ['Sahara', 'Gobi', 'Kalahari', 'Thar'], correct: 'Sahara' },
+  { question: 'Which is the largest ocean in the world?', options: ['Pacific', 'Atlantic', 'Indian', 'Arctic'], correct: 'Pacific' },
+  { question: 'Which of these is NOT part of Nium\'s Americas footprint?', options: ['Brazil', 'Canada', 'Mexico', 'Argentina'], correct: 'Argentina' },
+  { question: "The Great Barrier Reef, the world's largest coral reef system, is located off the coast of which country?", options: ['Australia', 'Philippines', 'Indonesia', 'Fiji'], correct: 'Australia' },
+  { question: 'Which country did we open our newest office in?', options: ['Mexico', 'Vietnam', 'Poland', 'Chile'], correct: 'Mexico' },
+  { question: 'Which currency is used in Japan?', options: ['Yen', 'Won', 'Yuan', 'Ringgit'], correct: 'Yen' },
+  { question: "Mount Everest, the world's tallest mountain, sits on the border of which two countries?", options: ['Nepal and China', 'India and Nepal', 'Nepal and Bhutan', 'China and India'], correct: 'Nepal and China' },
+  { question: 'Which of these Middle East locations is part of Nium\'s footprint?', options: ['UAE', 'Qatar', 'Bahrain', 'Oman'], correct: 'UAE' },
+  { question: 'Machu Picchu, the ancient Incan citadel, is located in which country?', options: ['Peru', 'Mexico', 'Egypt', 'Cambodia'], correct: 'Peru' }
+];
+
+let state = { currentQuestion: 0, selectedAnswer: null, score: 0, teamName: '' };
+
+function showScreen(screen) {
+  document.getElementById('screen-start').style.display = screen === 'start' ? 'block' : 'none';
+  document.getElementById('screen-quiz').style.display = screen === 'quiz' ? 'block' : 'none';
+  document.getElementById('screen-results').style.display = screen === 'results' ? 'block' : 'none';
 }
 
-function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+function updateQuizUI() {
+  const q = questions[state.currentQuestion];
+  document.getElementById('questionText').textContent = q.question;
+  document.getElementById('qNum').textContent = state.currentQuestion + 1;
+  document.getElementById('progressBar').style.width = ((state.currentQuestion + 1) / 15 * 100) + '%';
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+
+  q.options.forEach(option => {
+    const btn = document.createElement('button');
+    btn.textContent = option;
+    const selected = state.selectedAnswer === option;
+    btn.style.cssText = `padding: 14px; background: ${selected ? '#46CCFF' : '#151A6E'}; color: ${selected ? '#0B0E58' : '#fff'}; border: 1px solid ${selected ? '#46CCFF' : '#2A2F8C'}; border-radius: 6px; text-align: left; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; cursor: pointer; transition: all 0.2s; font-weight: ${selected ? '700' : '400'};`;
+    btn.onclick = () => selectAnswer(option);
+    container.appendChild(btn);
+  });
+
+  const nextBtn = document.getElementById('nextBtn');
+  const hasAnswer = !!state.selectedAnswer;
+  nextBtn.disabled = !hasAnswer;
+  nextBtn.style.background = hasAnswer ? '#46CCFF' : '#333A8C';
+  nextBtn.style.color = hasAnswer ? '#0B0E58' : '#8890C9';
+  nextBtn.style.cursor = hasAnswer ? 'pointer' : 'not-allowed';
+  nextBtn.textContent = state.currentQuestion === 14 ? 'Finish Quiz' : 'Next Question';
+}
+
+function selectAnswer(option) {
+  state.selectedAnswer = option;
+  updateQuizUI();
+}
+
+function startQuiz() {
+  const groupName = document.getElementById('groupSelect').value;
+  if (!groupName) return;
+
+  const submittedTeams = JSON.parse(localStorage.getItem('nium_leg3_submitted_teams') || '[]');
+  if (submittedTeams.includes(groupName)) {
+    if (!confirm(groupName + ' already submitted from this browser. Submit again anyway?')) return;
+  }
+
+  state.teamName = groupName;
+  state.currentQuestion = 0;
+  state.selectedAnswer = null;
+  state.score = 0;
+  showScreen('quiz');
+  updateQuizUI();
+}
+
+function nextQuestion() {
+  const q = questions[state.currentQuestion];
+  if (state.selectedAnswer === q.correct) state.score++;
+
+  if (state.currentQuestion === 14) {
+    showResults();
+  } else {
+    state.currentQuestion++;
+    state.selectedAnswer = null;
+    updateQuizUI();
+  }
+}
+
+async function showResults() {
+  document.getElementById('teamDisplay').textContent = state.teamName;
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalPercent').textContent = Math.round(state.score / 15 * 100);
+  showScreen('results');
+  await sendResultsToServer(state.teamName, state.score);
+}
+
+async function sendResultsToServer(teamName, score) {
+  const percentage = Math.round(score / 15 * 100);
+  const statusEl = document.getElementById('submitStatus');
+
+  const submittedTeams = JSON.parse(localStorage.getItem('nium_leg3_submitted_teams') || '[]');
+  if (!submittedTeams.includes(teamName)) {
+    submittedTeams.push(teamName);
+    localStorage.setItem('nium_leg3_submitted_teams', JSON.stringify(submittedTeams));
+  }
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    statusEl.textContent = 'Score not saved centrally yet - backend link not configured. Contact your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    return;
+  }
+
   try {
-    var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheetName = responsesSheetName(data.leg);
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ teamName, score, percentage, leg: 3 })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      statusEl.textContent = 'Score saved! Good luck on the leaderboard.';
+      statusEl.style.color = '#46CCFF';
+    } else {
+      throw new Error(data.message || 'unknown error');
     }
-
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Timestamp', 'Team Name', 'Score', 'Percentage', 'Participant Name']);
-    } else if (sheet.getRange(1, 5).getValue() === '') {
-      // Existing sheet from before the Participant Name column existed - backfill just the
-      // header cell so old rows are untouched and new rows line up correctly.
-      sheet.getRange(1, 5).setValue('Participant Name');
-    }
-
-    sheet.appendRow([new Date(), data.teamName, data.score, data.percentage, data.participantName || '']);
-
-    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' }))
-      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
+    statusEl.textContent = 'Could not save your score centrally (' + err.message + '). Please screenshot this page and send it to your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    console.error('Submission failed:', err);
   }
 }
 
-function doGet(e) {
-  // ?type=standings serves the public, all-5-legs standings feed (Standings tab).
-  if (e && e.parameter && e.parameter.type === 'standings') {
-    return getStandings();
-  }
+document.getElementById('groupSelect').addEventListener('change', function () {
+  const startBtn = document.getElementById('startBtn');
+  const has = !!this.value;
+  startBtn.disabled = !has;
+  startBtn.style.background = has ? '#46CCFF' : '#333A8C';
+  startBtn.style.color = has ? '#0B0E58' : '#8890C9';
+  startBtn.style.cursor = has ? 'pointer' : 'not-allowed';
+});
+document.getElementById('startBtn').addEventListener('click', startQuiz);
+document.getElementById('nextBtn').addEventListener('click', nextQuestion);
 
-  // ?leg=3 reads Leg 3's own tab; no param (default) keeps the existing private
-  // Leg 1 quiz-responses feed working exactly as before, for the private dashboard.
-  var legParam = e && e.parameter && e.parameter.leg;
-  var sheetName = responsesSheetName(legParam);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName)
-    || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var values = sheet.getDataRange().getValues();
-  var rows = [];
-  for (var i = 1; i < values.length; i++) {
-    rows.push({
-      timestamp: values[i][0],
-      teamName: values[i][1],
-      score: values[i][2],
-      percentage: values[i][3],
-      participantName: values[i][4] || ''
-    });
-  }
-  return ContentService.createTextOutput(JSON.stringify({ results: rows }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function getStandings() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Standings');
-  if (!sheet) {
-    return ContentService.createTextOutput(JSON.stringify({ standings: [], error: 'No Standings tab found yet.' }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  var values = sheet.getDataRange().getValues();
-  var rows = [];
-  // Expected columns: Team Name | Leg 1 | Leg 2 | Leg 3 | Leg 4 | Leg 5
-  for (var i = 1; i < values.length; i++) {
-    var row = values[i];
-    if (!row[0]) continue;
-    rows.push({
-      team: row[0],
-      leg1: row[1], leg2: row[2], leg3: row[3], leg4: row[4], leg5: row[5]
-    });
-  }
-  return ContentService.createTextOutput(JSON.stringify({ standings: rows }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+showScreen('start');
+</script>
+</body>
+</html>
