@@ -75,10 +75,11 @@ body { background: #0B0E58; color: #FFFFFF; font-family: 'Segoe UI', Arial, sans
 </div>
 
 <script>
-// Same Web App URL as Leg 1 - one Google Sheet, one deployment. The "leg: 3" field
-// in the submit payload below tells the script to write into the "Leg3 Responses"
-// tab instead of Leg 1's "Responses" tab, so the two legs' data stay separate.
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyMhmt3uCKcQWn-cU9CQo0fX6XfL9Ke3iKzM9moXBjKXAkg8BIWegpslhQHGno0q7ThlA/exec";
+// Same underlying Google Sheet/script as Leg 1, but its own deployment (a separate
+// deployment of the same script project, created when the code was updated for
+// Leg 3 routing). The "leg: 3" field in the submit payload below tells the script
+// to write into the "Leg3 Responses" tab instead of Leg 1's "Responses" tab.
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwGRtB8RcEVHDHaWwSjXfvrn_0j5bGcDOjDM-oxtIRAWK5Ix65VYPsBWKFya97KD0WDzQ/exec";
 
 const questions = [
   { question: 'Roughly how many countries does Nium have an office or registered site presence in today?', options: ['19', '23', '27', '34'], correct: '27' },
