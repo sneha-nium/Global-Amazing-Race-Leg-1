@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Global Amazing Race - Leg 3 Quiz (Just for Fun)</title>
+<style>
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+body { background: #0B0E58; color: #FFFFFF; font-family: 'Segoe UI', Arial, sans-serif; }
+* { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="app" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 24px; position: relative; overflow: hidden;">
+  <div style="position:absolute; top:-40px; right:-60px; width:320px; height:320px; border-radius:50%; background:#3D2080; opacity:0.35; pointer-events:none;"></div>
+  <div style="width: 100%; max-width: 600px; position: relative; z-index: 1;">
+
+    <div id="screen-start" style="display: block;">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <p style="font-size: 16px; font-weight: 700; letter-spacing: 1px; margin: 0 0 16px 0; color: #46CCFF; text-transform: uppercase;">Leg 3 Trivia - Open Challenge</p>
+        <h1 style="font-weight: 700; font-size: 44px; margin: 0 0 24px 0; line-height: 1.1;">Know the <span style="color:#46CCFF;">World</span></h1>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0;">Nium Global Amazing Race - just for fun, open to everyone</p>
+      </div>
+      <div style="background: #151A6E; padding: 32px; margin-bottom: 24px; border-radius: 12px; border: 1px solid #2A2F8C;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #46CCFF;">Your Name</label>
+        <input id="nameInput" type="text" placeholder="e.g. Priya Sharma" style="width: 100%; padding: 12px; background: #0B0E58; border: 1px solid #46CCFF; border-radius: 6px; color: #fff; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; outline: none; margin-bottom: 24px; box-sizing: border-box;">
+        <p style="font-size: 13px; color: #9AA0D9; margin: 0 0 24px 0;">15 questions - Mix of Nium global footprint facts and world geography/culture trivia - 1 point each. This is just for fun and doesn't affect the official race standings.</p>
+        <button id="startBtn" disabled style="width: 100%; padding: 14px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Start Quiz</button>
+      </div>
+    </div>
+
+    <div id="screen-quiz" style="display: none;">
+      <div style="margin-bottom: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h2 style="font-size: 22px; font-weight: 700; margin: 0;">Question <span id="qNum" style="color:#46CCFF;">1</span> of 15</h2>
+        </div>
+        <div style="width: 100%; height: 6px; background: #2A2F8C; margin-bottom: 32px; border-radius: 3px;">
+          <div id="progressBar" style="height: 100%; background: #46CCFF; width: 6.67%; transition: width 0.3s; border-radius: 3px;"></div>
+        </div>
+        <h3 id="questionText" style="font-size: 20px; font-weight: 500; margin: 0 0 24px 0; line-height: 1.4;"></h3>
+        <div id="optionsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <button id="nextBtn" disabled style="width: 100%; padding: 14px; margin-top: 32px; background: #333A8C; color: #8890C9; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; cursor: not-allowed; text-transform: uppercase; letter-spacing: 0.5px;">Next Question</button>
+      </div>
+    </div>
+
+    <div id="screen-results" style="display: none;">
+      <div style="text-align: center;">
+        <h2 style="font-weight: 700; font-size: 38px; margin: 0 0 16px 0;">Quiz Complete!</h2>
+        <p style="font-size: 18px; color: #C9CCEF; margin: 0 0 48px 0;" id="teamDisplay"></p>
+        <div style="background: #151A6E; padding: 48px 32px; margin-bottom: 32px; border-left: 4px solid #46CCFF; border-radius: 12px;">
+          <div style="font-size: 13px; color: #9AA0D9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700;">Final Score</div>
+          <div style="font-weight: 700; font-size: 64px; margin: 0; color: #46CCFF;"><span id="finalScore">0</span>/15</div>
+          <div style="font-size: 18px; color: #C9CCEF; margin-top: 16px;"><span id="finalPercent">0</span>%</div>
+        </div>
+        <p id="submitStatus" style="font-size: 14px; color: #9AA0D9; margin-top: 32px;">Saving your score...</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Same backend/Sheet as the Leg 3 team quiz - entries here are tagged as
+// "Just for Fun - Not on a Team" so they never overwrite an official team's score.
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyt3ry1NPgJKmuQ2TRgFaQI52k0U_yQRJT5Rvg6GwJVd2ty-1D70fNPFcEx4WjDXvBHwA/exec";
+const FUN_TEAM_LABEL = "Just for Fun - Not on a Team";
+
+const questions = [
+  { question: 'Roughly how many countries does Nium have an office or registered site presence in today?', options: ['19', '23', '27', '34'], correct: '27' },
+  { question: 'What is the smallest country in the world by land area?', options: ['Monaco', 'Vatican City', 'San Marino', 'Liechtenstein'], correct: 'Vatican City' },
+  { question: 'How many continents does Nium do business in today?', options: ['4', '5', '6', '7'], correct: '6' },
+  { question: 'Which is the largest country in the world by land area?', options: ['Russia', 'Canada', 'China', 'USA'], correct: 'Russia' },
+  { question: 'Which of these cities lies in the Southern Hemisphere?', options: ['Sao Paulo', 'Toronto', 'London', 'Tokyo'], correct: 'Sao Paulo' },
+  { question: 'Which of these countries is part of Nium\'s global footprint?', options: ['Vietnam', 'Republic of Korea', 'Portugal', 'Argentina'], correct: 'Republic of Korea' },
+  { question: 'Which desert is the largest hot desert in the world?', options: ['Sahara', 'Gobi', 'Kalahari', 'Thar'], correct: 'Sahara' },
+  { question: 'Which is the largest ocean in the world?', options: ['Pacific', 'Atlantic', 'Indian', 'Arctic'], correct: 'Pacific' },
+  { question: 'Which of these is NOT part of Nium\'s Americas footprint?', options: ['Brazil', 'Canada', 'Mexico', 'Argentina'], correct: 'Argentina' },
+  { question: "The Great Barrier Reef, the world's largest coral reef system, is located off the coast of which country?", options: ['Australia', 'Philippines', 'Indonesia', 'Fiji'], correct: 'Australia' },
+  { question: 'Which country did we open our newest office in?', options: ['Mexico', 'Vietnam', 'Poland', 'Chile'], correct: 'Mexico' },
+  { question: 'Which currency is used in Japan?', options: ['Yen', 'Won', 'Yuan', 'Ringgit'], correct: 'Yen' },
+  { question: "Mount Everest, the world's tallest mountain, sits on the border of which two countries?", options: ['Nepal and China', 'India and Nepal', 'Nepal and Bhutan', 'China and India'], correct: 'Nepal and China' },
+  { question: 'Which of these Middle East locations is part of Nium\'s footprint?', options: ['UAE', 'Qatar', 'Bahrain', 'Oman'], correct: 'UAE' },
+  { question: 'Machu Picchu, the ancient Incan citadel, is located in which country?', options: ['Peru', 'Mexico', 'Egypt', 'Cambodia'], correct: 'Peru' }
+];
+
+let state = { currentQuestion: 0, selectedAnswer: null, score: 0, participantName: '' };
+
+function showScreen(screen) {
+  document.getElementById('screen-start').style.display = screen === 'start' ? 'block' : 'none';
+  document.getElementById('screen-quiz').style.display = screen === 'quiz' ? 'block' : 'none';
+  document.getElementById('screen-results').style.display = screen === 'results' ? 'block' : 'none';
+}
+
+function updateQuizUI() {
+  const q = questions[state.currentQuestion];
+  document.getElementById('questionText').textContent = q.question;
+  document.getElementById('qNum').textContent = state.currentQuestion + 1;
+  document.getElementById('progressBar').style.width = ((state.currentQuestion + 1) / 15 * 100) + '%';
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+
+  q.options.forEach(option => {
+    const btn = document.createElement('button');
+    btn.textContent = option;
+    const selected = state.selectedAnswer === option;
+    btn.style.cssText = `padding: 14px; background: ${selected ? '#46CCFF' : '#151A6E'}; color: ${selected ? '#0B0E58' : '#fff'}; border: 1px solid ${selected ? '#46CCFF' : '#2A2F8C'}; border-radius: 6px; text-align: left; font-size: 16px; font-family: 'Segoe UI', Arial, sans-serif; cursor: pointer; transition: all 0.2s; font-weight: ${selected ? '700' : '400'};`;
+    btn.onclick = () => selectAnswer(option);
+    container.appendChild(btn);
+  });
+
+  const nextBtn = document.getElementById('nextBtn');
+  const hasAnswer = !!state.selectedAnswer;
+  nextBtn.disabled = !hasAnswer;
+  nextBtn.style.background = hasAnswer ? '#46CCFF' : '#333A8C';
+  nextBtn.style.color = hasAnswer ? '#0B0E58' : '#8890C9';
+  nextBtn.style.cursor = hasAnswer ? 'pointer' : 'not-allowed';
+  nextBtn.textContent = state.currentQuestion === 14 ? 'Finish Quiz' : 'Next Question';
+}
+
+function selectAnswer(option) {
+  state.selectedAnswer = option;
+  updateQuizUI();
+}
+
+function startQuiz() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+
+  const submittedNames = JSON.parse(localStorage.getItem('nium_leg3_fun_submitted_names') || '[]');
+  if (submittedNames.includes(name)) {
+    if (!confirm(name + ' already submitted from this browser. Submit again anyway?')) return;
+  }
+
+  state.participantName = name;
+  state.currentQuestion = 0;
+  state.selectedAnswer = null;
+  state.score = 0;
+  showScreen('quiz');
+  updateQuizUI();
+}
+
+function nextQuestion() {
+  const q = questions[state.currentQuestion];
+  if (state.selectedAnswer === q.correct) state.score++;
+
+  if (state.currentQuestion === 14) {
+    showResults();
+  } else {
+    state.currentQuestion++;
+    state.selectedAnswer = null;
+    updateQuizUI();
+  }
+}
+
+async function showResults() {
+  document.getElementById('teamDisplay').textContent = state.participantName;
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalPercent').textContent = Math.round(state.score / 15 * 100);
+  showScreen('results');
+  await sendResultsToServer(state.participantName, state.score);
+}
+
+async function sendResultsToServer(participantName, score) {
+  const percentage = Math.round(score / 15 * 100);
+  const statusEl = document.getElementById('submitStatus');
+
+  const submittedNames = JSON.parse(localStorage.getItem('nium_leg3_fun_submitted_names') || '[]');
+  if (!submittedNames.includes(participantName)) {
+    submittedNames.push(participantName);
+    localStorage.setItem('nium_leg3_fun_submitted_names', JSON.stringify(submittedNames));
+  }
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    statusEl.textContent = 'Score not saved centrally yet - backend link not configured. Contact your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    return;
+  }
+
+  try {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ teamName: FUN_TEAM_LABEL, score, percentage, participantName })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      statusEl.textContent = 'Score saved! Thanks for playing.';
+      statusEl.style.color = '#46CCFF';
+    } else {
+      throw new Error(data.message || 'unknown error');
+    }
+  } catch (err) {
+    statusEl.textContent = 'Could not save your score centrally (' + err.message + '). Please screenshot this page and send it to your Comms Lead.';
+    statusEl.style.color = '#F7246C';
+    console.error('Submission failed:', err);
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', startQuiz);
+document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+document.getElementById('nameInput').addEventListener('input', () => {
+  const btn = document.getElementById('startBtn');
+  const hasName = !!document.getElementById('nameInput').value.trim();
+  btn.disabled = !hasName;
+  btn.style.background = hasName ? '#46CCFF' : '#333A8C';
+  btn.style.color = hasName ? '#0B0E58' : '#8890C9';
+  btn.style.cursor = hasName ? 'pointer' : 'not-allowed';
+});
+
+showScreen('start');
+</script>
+</body>
+</html>
