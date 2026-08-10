@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Leg 4 Showcase</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px 64px; }
+* { box-sizing: border-box; }
+.wrap { max-width: 900px; margin: 0 auto; }
+h1 { color: #0B0E58; font-size: 28px; margin: 0 0 6px 0; }
+.subtitle { color: #666; font-size: 15px; margin: 0 0 28px 0; line-height: 1.5; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 700px) { .grid { grid-template-columns: 1fr 1fr; } }
+.card { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+.team-name { color: #0B0E58; font-size: 17px; font-weight: 700; margin: 0 0 4px 0; }
+.option-tag { display: inline-block; background: #EAF8FF; color: #0B0E58; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+.media-box { margin: 4px 0 10px 0; border-radius: 8px; overflow: hidden; background: #F5F5F5; }
+.media-box img, .media-box video { max-width: 100%; width: 100%; border-radius: 8px; display: block; }
+.media-box audio { width: 100%; }
+.media-link { display: inline-block; background: #0B0E58; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin: 4px 0 10px 0; }
+.blurb { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 6px; flex-grow: 1; }
+.extra-note { font-size: 12px; color: #888; margin-bottom: 10px; }
+.extra-note a { color: #0B0E58; font-weight: 600; }
+.like-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.like-btn { background: #F5F5F5; border: 1px solid #DDD; border-radius: 999px; padding: 8px 16px; font-size: 15px; font-weight: 700; color: #0B0E58; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.15s, border-color 0.15s; }
+.like-btn:hover { background: #EAF8FF; border-color: #46CCFF; }
+.like-btn.liked { background: #0B0E58; color: #fff; border-color: #0B0E58; cursor: default; }
+.like-count { font-size: 13px; color: #999; }
+.top-note { background: #EAF8FF; border: 1px solid #46CCFF; color: #0B0E58; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 24px; line-height: 1.5; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🤖 Leg 4: AI Showdown — Team Showcase</h1>
+  <p class="subtitle">All 10 team submissions from Leg 4, where teams used AI tools to write jingles, solve a logic puzzle, or generate images and memes celebrating global teamwork. Have a look, and show your favourites some love!</p>
+  <div class="top-note">This is just for fun — judges are scoring these separately. Your likes don't affect official scoring right now, but may factor into a bonus later on.</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+const LIKES_WEBAPP_URL = "PASTE_YOUR_LEG4_LIKES_WEBAPP_URL_HERE";
+
+const submissions = [
+  {
+    team: "Group 1 - Mindful Navigators",
+    option: "C",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group1-mindful-navigators.png",
+    blurb: "A glowing global-teamwork poster - NIUMers from every region coming together to build a puzzle-piece world."
+  },
+  {
+    team: "Group 2 - Fast & Curious",
+    option: "B",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.jpg",
+    blurb: "Handed their AI a four-analyst logic puzzle and had it show every step of its reasoning."
+  },
+  {
+    team: "Group 3 - The Borderless Brigade",
+    option: "A",
+    mediaType: "audio",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group3-borderless-brigade.mp3",
+    blurb: "\"Simplifica y Gana\" - a Spanish disco jingle that smuggles all three Nium values into one catchy line."
+  },
+  {
+    team: "Group 7 - The Nium Hokages",
+    option: "C",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group7-nium-hokages.jpg",
+    blurb: "A sleek world map connecting Mumbai to Malta to San Francisco - every Nium function has its own glowing hub."
+  },
+  {
+    team: "Group 8 - We Need Therapy",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group8-we-need-therapy.mp4",
+    blurb: "\"El Dinero Vuela\" - a full AI-made music video, from Spanish lyrics to the final cut, zero humans singing."
+  },
+  {
+    team: "Group 9 - Smartinis",
+    option: "C",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-final.png",
+    blurb: "\"The Calendar\" - the team's own faces starring in the ultimate global-timezone-chaos meme."
+  },
+  {
+    team: "Group 10 - Innov Agents",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group10-innov-agents.mp4",
+    blurb: "A jingle that travels through five languages before landing on what Nium stands for."
+  },
+  {
+    team: "Group 11 - Beyond Borders",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group11-beyond-borders.mp4",
+    blurb: "\"Invisible Power\" - a cinematic Hindi anthem about the technology you never see, quietly moving money."
+  },
+  {
+    team: "Group 12 - High Five",
+    option: "A",
+    mediaType: "audio",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group12-high-five.mp3",
+    blurb: "\"Go With Nium\" - one anthem, sung across six languages, one world."
+  },
+  {
+    team: "Group 13 - The Matrix Minds",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group13-matrix-minds-v2.mp4",
+    blurb: "\"One Beat, Many Borders\" - a tiny payment mascot outruns everyone's meeting invite across three time zones.",
+    extra: {
+      label: "Bonus: \"Aankhein Khuli - Nium Version\"",
+      mediaType: "video",
+      mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group13-matrix-minds-aankhein-khuli.mp4",
+      blurb: "A 90s Bollywood-romance jingle turning a cross-border payment into a London-Mumbai love story."
+    }
+  }
+];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderMedia(mediaType, mediaUrl, altText) {
+  if (mediaType === 'image') {
+    return `<div class="media-box"><img src="${esc(mediaUrl)}" alt="${esc(altText)}"></div>`;
+  }
+  if (mediaType === 'video') {
+    return `<div class="media-box"><video controls src="${esc(mediaUrl)}"></video></div>`;
+  }
+  if (mediaType === 'audio') {
+    return `<div class="media-box"><audio controls src="${esc(mediaUrl)}"></audio></div>`;
+  }
+  return `<a class="media-link" href="${esc(mediaUrl)}" target="_blank" rel="noopener">View submission ↗</a>`;
+}
+
+function likedKey(team) {
+  return 'nium_leg4_liked__' + team;
+}
+
+async function loadLikes() {
+  if (!LIKES_WEBAPP_URL || LIKES_WEBAPP_URL.indexOf('PASTE_YOUR') === 0) return {};
+  try {
+    const res = await fetch(LIKES_WEBAPP_URL);
+    const data = await res.json();
+    const map = {};
+    (data.results || []).forEach(r => { map[r.team] = Number(r.likes) || 0; });
+    return map;
+  } catch (e) {
+    return {};
+  }
+}
+
+async function sendLike(team) {
+  if (!LIKES_WEBAPP_URL || LIKES_WEBAPP_URL.indexOf('PASTE_YOUR') === 0) return false;
+  try {
+    const res = await fetch(LIKES_WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ team })
+    });
+    const data = await res.json();
+    return data.status === 'ok';
+  } catch (e) {
+    return false;
+  }
+}
+
+async function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<p class="subtitle">Loading submissions...</p>';
+  const likeCounts = await loadLikes();
+  grid.innerHTML = '';
+
+  submissions.forEach((sub, idx) => {
+    const alreadyLiked = !!localStorage.getItem(likedKey(sub.team));
+    const count = likeCounts[sub.team] || 0;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="team-name">${esc(sub.team)}</div>
+      <span class="option-tag">Option ${esc(sub.option)}</span>
+      ${renderMedia(sub.mediaType, sub.mediaUrl, sub.team)}
+      <div class="blurb">${esc(sub.blurb)}</div>
+      ${sub.extra ? `
+        <div class="extra-note"><strong>${esc(sub.extra.label)}:</strong> ${esc(sub.extra.blurb)}</div>
+        ${renderMedia(sub.extra.mediaType, sub.extra.mediaUrl, sub.team + ' bonus')}
+      ` : ''}
+      <div class="like-row">
+        <button class="like-btn ${alreadyLiked ? 'liked' : ''}" id="like-${idx}">
+          ${alreadyLiked ? '❤️ Liked' : '🤍 Like'}
+        </button>
+        <span class="like-count" id="count-${idx}">${count} ${count === 1 ? 'like' : 'likes'}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    const btn = document.getElementById(`like-${idx}`);
+    if (alreadyLiked) {
+      btn.disabled = true;
+    } else {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const ok = await sendLike(sub.team);
+        if (ok) {
+          localStorage.setItem(likedKey(sub.team), '1');
+          btn.className = 'like-btn liked';
+          btn.textContent = '❤️ Liked';
+          const countEl = document.getElementById(`count-${idx}`);
+          const newCount = count + 1;
+          countEl.textContent = newCount + (newCount === 1 ? ' like' : ' likes');
+        } else {
+          btn.disabled = false;
+          btn.textContent = '🤍 Like (try again)';
+        }
+      });
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
