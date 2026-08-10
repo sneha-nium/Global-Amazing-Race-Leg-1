@@ -11,9 +11,13 @@ body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans
 .wrap { max-width: 720px; margin: 0 auto; }
 h1 { color: #0B0E58; font-size: 26px; margin: 0 0 4px 0; }
 .subtitle { color: #666; font-size: 14px; margin: 0 0 24px 0; }
-.judge-select { background: #fff; border: 1px solid #DDD; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+.judge-select { background: #fff; border: 1px solid #DDD; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
 .judge-select label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0B0E58; display: block; margin-bottom: 8px; }
-select { width: 100%; padding: 10px; border: 1px solid #46CCFF; border-radius: 6px; font-size: 15px; font-family: inherit; }
+select, input[type=text] { width: 100%; padding: 10px; border: 1px solid #46CCFF; border-radius: 6px; font-size: 15px; font-family: inherit; }
+.page { }
+.page.hidden { display: none; }
+.page-1-box { background: #fff; border-radius: 10px; padding: 28px 24px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+button.link-btn { background: none; border: none; color: #0B0E58; text-decoration: underline; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 16px; }
 .progress { font-size: 13px; color: #666; margin-bottom: 20px; }
 .card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .card.done { border-left: 4px solid #46CCFF; }
@@ -23,8 +27,15 @@ select { width: 100%; padding: 10px; border: 1px solid #46CCFF; border-radius: 6
 .media-box img, .media-box video { max-width: 100%; border-radius: 6px; display: block; }
 .media-box audio { width: 100%; }
 .media-link { display: inline-block; background: #0B0E58; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin: 8px 0; }
-.prompt-box { background: #F9F9FB; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #555; margin: 10px 0; white-space: pre-wrap; }
 .no-submission { color: #999; font-style: italic; padding: 16px; text-align: center; background: #FAFAFA; border-radius: 6px; }
+.pn-wrap { background: #F9F9FB; border-radius: 6px; padding: 12px 14px; margin: 10px 0; }
+.pn-block { margin: 0 0 10px 0; }
+.pn-block:last-child { margin-bottom: 0; }
+.pn-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0B0E58; margin-bottom: 3px; }
+.pn-text { font-size: 13px; color: #444; line-height: 1.5; }
+.flag-box { background: #FFF7E6; border: 1px solid #F5C453; color: #7A5B00; border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.5; margin: 10px 0; }
+.flag-box strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.extra-label { background: #0B0E58; color: #fff; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; padding: 8px 12px; border-radius: 6px; margin-top: 18px; }
 .score-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .score-field { flex: 1; min-width: 140px; }
 .score-field label { font-size: 12px; font-weight: 700; color: #0B0E58; display: block; margin-bottom: 4px; }
@@ -40,22 +51,30 @@ button.submit-btn:disabled { background: #DDD; color: #999; cursor: not-allowed;
 </head>
 <body>
 <div class="wrap">
-  <h1>🤖 Leg 4: AI Showdown — Judging</h1>
-  <p class="subtitle">Score each team's submission below. Your scores save automatically per team.</p>
 
-  <div class="judge-select">
-    <label>Who's scoring?</label>
-    <select id="judgeSelect">
-      <option value="">-- Select your name --</option>
-      <option value="Andre">Andre</option>
-      <option value="Danielle">Danielle</option>
-      <option value="Spencer">Spencer</option>
-      <option value="Abhay">Abhay</option>
-    </select>
+  <!-- PAGE 1: name entry -->
+  <div id="page-name" class="page">
+    <h1>🤖 Leg 4: AI Showdown — Judging</h1>
+    <p class="subtitle">Score each team's AI Showdown submission. Your scores save automatically per team.</p>
+    <div class="page-1-box">
+      <div class="judge-select">
+        <label>Your name</label>
+        <input type="text" id="judgeNameInput" placeholder="Type your full name" autocomplete="off">
+      </div>
+      <button class="submit-btn" id="startBtn">Start Judging</button>
+      <p class="status-msg status-err" id="nameError"></p>
+    </div>
   </div>
 
-  <p class="progress" id="progressNote"></p>
-  <div id="cards"></div>
+  <!-- PAGE 2: scoring cards -->
+  <div id="page-scoring" class="page hidden">
+    <h1>🤖 Leg 4: AI Showdown — Judging</h1>
+    <p class="subtitle">Score each team's submission below. Your scores save automatically per team.</p>
+    <button class="link-btn" id="changeNameBtn">← Not you? Change name</button>
+    <p class="progress" id="progressNote"></p>
+    <div id="cards"></div>
+  </div>
+
 </div>
 
 <script>
@@ -63,20 +82,19 @@ button.submit-btn:disabled { background: #DDD; color: #999; cursor: not-allowed;
 const WEBAPP_URL = "PASTE_YOUR_LEG4_JUDGING_WEBAPP_URL_HERE";
 
 // ---------------------------------------------------------------------------
-// SUBMISSIONS DATA - fill this in with each team's actual entry once
-// collected from their Slack channel. mediaType is one of: "image", "video",
-// "audio", or "link" (link = just show a clickable button, e.g. for a file
-// Slack won't let us embed directly, like a Word/PDF prompt doc or a video
-// hosted somewhere that needs a click-through rather than inline playback).
+// SUBMISSIONS DATA. Only teams that actually submitted are listed (Groups 4,
+// 5 and 6 did not submit for Leg 4 and have been left out entirely).
 //
-// IMPORTANT: Slack's own file links (files.slack.com / a Slack permalink)
-// generally will NOT embed here, because they require Slack login to view -
-// this page is a plain public GitHub Pages page with no Slack auth. For
-// each submission, re-upload the media file somewhere with a public share
-// link the browser can load directly - e.g. a Google Drive file set to
-// "Anyone with the link can view" (use the direct-view/embed link format,
-// not the "open in Drive" link), or upload the file itself to this same
-// GitHub repo (Add file -> Upload files) and use its raw GitHub URL.
+// Each entry:
+//   team, option ("A"/"B"/"C"), mediaType ("image"|"video"|"audio"|"document"),
+//   mediaUrl, concept (what it is), approach (tools/process), clever (the
+//   specific clever-prompting technique, optional), flags (array of judge-
+//   facing cautions/notes, optional), extraMedia (array of bonus/extra
+//   submissions with their own label + media + concept/approach, optional).
+//
+// IMPORTANT: media must be hosted with a plain public URL (GitHub repo file
+// or a Drive "Anyone with the link" share) - Slack file links will NOT embed
+// here since they require Slack login.
 // ---------------------------------------------------------------------------
 const submissions = [
   {
@@ -84,29 +102,110 @@ const submissions = [
     option: "C",
     mediaType: "image",
     mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group1-mindful-navigators.png",
-    promptNotes: "Create a premium corporate inspirational poster for NIUM, a global fintech and real-time payments company. Theme: Global teamwork, diversity, innovation, connectivity, and one shared purpose. Show a diverse group of 7-8 professional NIUM employees (\"NIUMers\") from different ethnicities and regions, men and women, gathered together around a large glowing 3D digital globe made of interlocking puzzle pieces. Each person should be actively placing or connecting a puzzle piece onto the globe, symbolizing that every NIUMer contributes to building the global payments ecosystem. The globe should have a futuristic electric blue/cyan fintech aesthetic, with a glowing NIUM \"N\" logo prominently integrated into the center... Include elegant regional callouts: INDIA - We Build, SINGAPORE - We Innovate, EUROPE - We Solve, NORTH AMERICA - We Connect, LATIN AMERICA - We Empower, AFRICA - We Grow. Headline: \"Different Time Zones. One Team. One Purpose.\" with \"Together, We Power Progress.\" and \"One Team of NIUMers. Limitless Impact.\" Visual style: premium Fortune-500 corporate campaign, cinematic photography, glowing cyan and deep navy palette. Brand colors: deep navy blue, white, electric cyan/teal. Note: generated people/globe/background first, added exact text afterward in a design tool since AI image generators can distort long corporate text.",
+    concept: "A global-teamwork poster: diverse NIUMers together build a glowing puzzle-piece globe, with regional callouts (India, Singapore, Europe, North America, Latin America, Africa) and the line \"Different Time Zones. One Team. One Purpose.\"",
+    approach: "AI image tool. People, globe and background were generated first, then the exact brand text and taglines were added afterward in a design tool (Canva/Photoshop/Figma), since AI image generators tend to distort long text.",
+    clever: "Prompt spelled out the exact composition (7-8 people, each placing one puzzle piece), specific brand colors (navy/cyan), and referenced a \"Fortune-500 corporate campaign\" style to steer the output away from a generic AI-poster look."
   },
-  { team: "Group 2 - Fast & Curious", option: "B", mediaType: "document", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.pdf", promptNotes: "Team gave their AI tool the Ops Queue Puzzle (Ana/Ben/Chen/Dara clues) and asked it to solve it, showing its full step-by-step reasoning. AI's stated chain: Clue 2+5 -> Ana or Ben used the ticketing queue at 18 transactions; Clue 3 -> Chen used the internal dashboard and Chen > Dara; Clue 4 -> Ben didn't use the script and Ben < Chen, so Ben is Spreadsheet or Ticketing Queue; Clue 1 -> Ana > spreadsheet user and < script user, and since Ben isn't the spreadsheet user, Ana must be the ticketing-queue user (18) using this logic. Final answer table submitted: Ana-Ticketing Queue-25, Ben-Spreadsheet-12, Chen-Internal Dashboard-31, Dara-Spreadsheet-18. NOTE FOR JUDGES: the final table doesn't fully match the AI's own reasoning (reasoning concludes Ana's ticketing count should be 18 per Clue 2, but the table shows 25; Ben and Dara are both listed as 'Spreadsheet', which isn't possible since each tool is used once and no one is assigned 'Script'). Per the brief, this leg is scored on clarity/quality of the AI's explanation, not just a correct final answer, so this is flagged for judges' awareness rather than corrected." },
-  { team: "Group 3 - The Borderless Brigade", option: "A", mediaType: "audio", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group3-borderless-brigade.mp3", promptNotes: "Song title: \"Simplifica y Gana.\" Prompt given to AI tool: \"a 30 second jingle the same beat as Harder, Better, Faster, Stronger by Daft Punk - house, electronic, French house, dance, disco, sung in Spanish, 30 seconds max, big drop and bass.\" Lyrics: \"Simplifica, mejora y gana en equipo: asi es el estilo Nium.\" English translation provided by the team: \"Keep it Simple, Make it Better & Win it Together - this is the Nium way.\"" },
-  { team: "Group 4 - Skywalkers", option: null, mediaType: null, mediaUrl: null, promptNotes: null },
-  { team: "Group 5 - NextGen Ninjas", option: null, mediaType: null, mediaUrl: null, promptNotes: null },
-  { team: "Group 6 - Team Nexus", option: null, mediaType: null, mediaUrl: null, promptNotes: null },
-  { team: "Group 7 - The Nium Hokages", option: "C", mediaType: "image", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group7-nium-hokages.jpg", promptNotes: "Prompt written by Copilot, image executed by Gemini. Title: \"Nium: Where Global Teams Move Together.\" Prompt: create a premium fintech-themed corporate illustration showing Nium teams collaborating globally across Mumbai, Singapore, Malta, London, Mexico City, and San Francisco, using a clean world map (not made of people) with each city as a glowing fintech collaboration hub, connected by digital payment corridors and currency flows (INR, USD, GBP, EUR, SGD, MXN). Each hub visually represents a Nium function - Tech (code/APIs), Product (roadmaps), People Management (culture/engagement), Operations (workflow automation), Finance (treasury/reconciliation), Workspace (hybrid workplace), Compliance (security/risk), GTM (growth/sales). Centered on a global transaction engine symbolizing global payments, innovation, trust, compliance, connectivity and teamwork. Style: premium fintech campaign artwork, photorealistic with futuristic elements, blue/teal/purple/electric cyan palette, no crowded scenes or dense clusters of people. Key message: \"Different markets. Different currencies. One connected team powering global payments.\" Team: Sovit Jain, Benjamin Speyer, Satyam Chaubey, Pratik Jadhav, Alejandra Perez Sanchez." },
-  { team: "Group 8 - We Need Therapy", option: "A", mediaType: "video", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group8-we-need-therapy.mp4", promptNotes: "Song: \"El Dinero Vuela\" (Spanish, 30.04s). 3-tool AI pipeline, zero humans singing: (1) Claude Code read the challenge brief PDF and scraped nium.com live for real brand facts - \"Making money move\", \"Payments anywhere, no borders, no delays\", 190+ payout markets, 100+ real-time markets, $60B+ processed yearly, HQ Singapore - then wrote rhyming Spanish lyrics + English translation baking in all 3 Nium values (Simple lo hacemos / mejor cada mision / juntos ganamos = Keep It Simple / Make It Better / Win It Together). (2) Suno (Custom mode) composed and sang it - style prompt: 'Upbeat Latin pop commercial jingle, energetic reggaeton-lite groove, catchy Spanish vocals, festive brass stabs, handclaps, bright synth, 120bpm, radio ad energy'; lyrics submitted with Suno structure tags and a deliberate [End] tag to keep it under 30s. (3) Claude Code + headless Chrome + ffmpeg built the video: scraped Nium's real logo/currency-flag assets and exact brand indigo (#0B0E58) from the site's own SVG, designed 7 HTML/CSS slides with English translations burned in under each lyric line, rendered them headlessly, then crossfaded them beat-matched to the song's exact 30.04s runtime. Clever prompting highlight: Spanish 'Nium' pronunciation needed 3 Suno iterations via phonetic respelling only in the sung lyrics (Nium -> Niyum -> Niyam, final 'NEE-yam' matches real pronunciation) while on-screen text kept the correct spelling. Team also used Claude to research which AI tool to use in the first place, and generated this prompting-trail document itself via headless Chrome." },
-  { team: "Group 9 - Smartinis", option: "C", mediaType: "image", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-final.png", promptNotes: "Nium x Instarem AI Meme Competition. Final selected meme: \"The Calendar\" - \"Project: 'Just get everyone on one call.'\" showing the team's own faces swapped into a global-scheduling-chaos meme (San Francisco / New York / London / Bengaluru / Singapore clocks, a whiteboard full of crossed-out meeting slots, \"someone is always asleep\", \"no perfect time\"). Process: fed the AI a reference meme template, individual teammate headshots, a team photo, and Nium branding/logos, with a master prompt requiring exact identity preservation (skin tone, hairstyle, facial hair, glasses) so every teammate stayed instantly recognizable rather than looking like an obvious face-swap. Iterated twice: (1) a realism pass to fix AI-looking faces and blend hairline/ears/jawline/neck naturally; (2) after team feedback that early concepts were 'too techie' (too API/engineering-focused), a broadening pass to make the humor relatable across Operations, Compliance, Finance, Customer Success, Marketing, HR, Product, Strategy and Engineering, not just engineers. Two earlier concept memes explored along the way (also submitted, not the final pick): \"When everyone says 'anytime works'\" and \"Me: let's do a quick 15-min sync\" - https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-concept1.png and https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-concept2.png" },
-  { team: "Group 10 - Innov Agents", option: "A", mediaType: "video", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group10-innov-agents.mp4", promptNotes: "A multilingual Nium jingle built around storytelling rather than a fact list - the song follows a narrative arc: what does Nium mean, what is our mission, how do we connect the world, how do our values bring us together. Each language carries one simple idea rather than repeating translated lyrics, kept as short catchy one-liners so non-speakers can follow the emotion through music + English translations. Language choices are tied to meaning: \"Niyama\" (Hindi/Sanskrit) opens with the origin of the name - rules, principles, discipline; Italian represents going beyond borders; French represents one connected world; German reinforces working together as one team; the final chorus lands in English on \"Keep it Simple, Make it Better, Win it Together\" and \"Simply Better Together.\" Team describes using AI iteratively as a creative collaborator rather than a single-shot generator - to brainstorm the concept, refine the storytelling, improve native-language phrasing/pronunciation, balance the flow between languages, generate music that transitions naturally between cultures, and create visuals reinforcing the journey of global money movement. NOTE FOR JUDGES: the submitted video runs approximately 39 seconds, a little over the brief's 30-second guideline - flagging for awareness, not corrected." },
-  { team: "Group 11 - Beyond Borders", option: "A", mediaType: "video", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group11-beyond-borders.mp4", promptNotes: "Concept \"Invisible Power\" - a Hindi jingle about the invisible technology layer that quietly powers global movement (\"Nium is not the visible transaction, it is the engine behind it\"). 4-tool AI pipeline: (1) ChatGPT for lyrics - iterated through ~7 prompts to move away from generic/borrowed brand taglines toward something Nium-specific, then to get natural-sounding Hindi-to-English translation (e.g. \"dikhe nahi... par chale har pal\" -> \"Invisible... yet moving every moment\"), landing on the chorus \"Nium in every flow, Nium in every move, tomorrow's world powered today\" plus \"Make It Simple, Make It Better, Win It Together.\" (2) Suno for audio - prompted for \"Bollywood with a bit of western pop, fast moving, almost rapping the words, no instrumental intro.\" (3) ChatGPT-drafted, Gemini-executed video generated in four ~10-second segments to match the audio timeline, with a consistent cinematic brief across all four (deep navy/electric-blue palette, a glowing pulse representing invisible technology traveling through Mumbai, Singapore, London, Dubai, New York, deliberately avoiding cash/coins/crypto/banking-dashboard cliches), explicitly instructed to leave clean negative space in the final frame rather than generating a fake logo, so the real Nium logo could be composited in afterward. (4) Clipchamp used for final edit, bilingual captioning with emoji accents for accessibility, and covering the Gemini watermark with the real Nium logo. NOTE: original uploaded file was a 308MB 4K/82Mbps .mov; re-encoded to a 17MB 1080p .mp4 for hosting, no visible quality loss at jingle-video scale." },
-  { team: "Group 12 - High Five", option: "A", mediaType: "audio", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group12-high-five.mp3", promptNotes: "\"Go With Nium - Global Anthem.\" Lyrics span six languages in sequence (English opening, Hindi, Punjabi, Portuguese, Spanish, Mandarin, Arabic) each with an English translation, closing on \"Why let your money wait? Send it out or bring it back! Together we win the world! One World... One Team... One Nium!\" NO PROMPT DOCUMENTATION SUPPLIED, despite repeated reminders to the team - the only file received was the lyrics/translation sheet, with no AI tool names or prompt text for either the lyrics or the audio generation. FLAG FOR JUDGES: without visibility into what was prompted and how, the 'clever prompting' criterion (up to 5 pts) can't be assessed on its intended basis - recommend scoring conservatively on that line, or Comms Lead should get one more direct ask before scoring closes. ALSO FLAG: the doc's own title says \"(45 sec)\" but the submitted audio runs 64.6 seconds - more than double the brief's 30-second guideline." },
-  { team: "Group 13 - The Matrix Minds", option: "A", mediaType: "video", mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group13-matrix-minds.mp4", promptNotes: "\"One Beat, Many Borders\" - a 30-second 3D-animated multilingual jingle. Concept: a tiny blue payment mascot races Malta -> Singapore -> Seoul while humans in each city are still stuck coordinating a 'quick' global meeting across time zones; the mascot is the only character in on the joke. Sung lines in Maltese, Mandarin, and Korean, each with an English translation, closing on the end-card line \"Time zones are complicated. Global payments don't have to be.\" Tools: ChatGPT (concept + iterative prompt refinement), Gemini (video generation, 3 separate clips), DaVinci Resolve (edit/assembly/end card). Clever prompting evidence: (1) used each clip's final frame as the image-to-video reference for the next clip to preserve mascot design, lighting, and motion direction across three separate AI generations; (2) turned a generation failure (the mascot briefly duplicating) into an explicit negative constraint - \"exactly ONE mascot, never duplicate, clone, mirror, split\" - for all later prompts; (3) deliberately told the generator not to produce subtitles/logos/financial claims, adding the translations and end card afterward in DaVinci Resolve for accuracy. Runtime matches the brief's 30-second target exactly.",
+  {
+    team: "Group 2 - Fast & Curious",
+    option: "B",
+    mediaType: "document",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.pdf",
+    concept: "Solved the Ops Queue Puzzle (Ana/Ben/Chen/Dara) and submitted the AI's full step-by-step reasoning alongside its final answer.",
+    approach: "Gave the AI the puzzle text directly and asked it to solve it and explain its reasoning.",
+    flags: [
+      "The final answer table doesn't fully match the AI's own reasoning: the reasoning concludes the Ticketing Queue user cleared 18 transactions, but the table shows Ana-Ticketing Queue-25; Ben and Dara are both listed as \"Spreadsheet\" (each tool should only be used once) and no one is assigned \"Script.\" Per the brief this leg scores on clarity of the AI's reasoning, not just a correct final answer - flagged for awareness, not corrected."
+    ]
+  },
+  {
+    team: "Group 3 - The Borderless Brigade",
+    option: "A",
+    mediaType: "audio",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group3-borderless-brigade.mp3",
+    concept: "\"Simplifica y Gana\" - a Spanish jingle built around Nium's three values.",
+    approach: "Prompted for a French-house/disco jingle \"in the same beat as Harder, Better, Faster, Stronger,\" sung in Spanish.",
+    clever: "The chorus line smuggles all three Nium values into one Spanish sentence: \"Simplifica, mejora y gana en equipo\" = Keep It Simple / Make It Better / Win It Together."
+  },
+  {
+    team: "Group 7 - The Nium Hokages",
+    option: "C",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group7-nium-hokages.jpg",
+    concept: "\"Nium: Where Global Teams Move Together\" - a clean world map with glowing hubs in Mumbai, Singapore, Malta, London, Mexico City and San Francisco, connected by currency flows, each hub tagged to a Nium function (Tech, Product, People, Ops, Finance, Workspace, Compliance, GTM).",
+    approach: "Prompt drafted with Copilot, image generated in Gemini. Team: Sovit Jain, Benjamin Speyer, Satyam Chaubey, Pratik Jadhav, Alejandra Perez Sanchez.",
+    clever: "Explicitly instructed the AI not to build the map out of people or crowded scenes, keeping it clean and corporate; specified exact currency symbols (INR/USD/GBP/EUR/SGD/MXN) and a distinct visual cue per department."
+  },
+  {
+    team: "Group 8 - We Need Therapy",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group8-we-need-therapy.mp4",
+    concept: "\"El Dinero Vuela\" - a Spanish Latin-pop jingle built from real Nium facts pulled live off nium.com (190+ payout markets, $60B+ processed yearly, and more).",
+    approach: "A 3-tool pipeline: Claude Code for research + lyrics, Suno for vocals, then Claude Code + headless Chrome + ffmpeg to build a video beat-matched to the song's exact 30.04-second runtime.",
+    clever: "Took 3 Suno iterations to get \"Nium\" pronounced correctly in Spanish, via phonetic respelling in the sung lyrics only (Nium -> Niyum -> Niyam) while the on-screen text kept the real spelling. Also pulled the exact brand indigo hex code directly from Nium's own logo file rather than guessing it."
+  },
+  {
+    team: "Group 9 - Smartinis",
+    option: "C",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-final.png",
+    concept: "\"The Calendar\" meme (final pick) - the team's own faces swapped into a global-scheduling-chaos meme: five timezone clocks and a whiteboard full of crossed-out meeting slots.",
+    approach: "Fed the AI a reference meme template, teammate headshots, a team photo and Nium branding; iterated for facial realism, then broadened the humor beyond engineering after team feedback that early drafts were \"too techie.\"",
+    clever: "Explicit instructions to preserve exact facial identity (skin tone, hairline, jawline) so the face-swap wouldn't look pasted-on or obviously AI-generated.",
+    extraMedia: [
+      {
+        label: "Creative journey - concept 1 → concept 2 → final pick",
+        mediaType: "image",
+        mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group9-smartinis-flow.png",
+        concept: "Two earlier concepts explored on the way to \"The Calendar\": \"Me: let's do a quick 15-min sync\" and \"When everyone says 'anytime works'\" - shown here as a single flow so judges can see how the joke sharpened across iterations before landing on the final pick."
+      }
+    ]
+  },
+  {
+    team: "Group 10 - Innov Agents",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group10-innov-agents.mp4",
+    concept: "A multilingual storytelling jingle: Hindi/Sanskrit \"Niyama\" (the origin of the name) -> Italian (going beyond borders) -> French (one connected world) -> German (working as one team) -> an English chorus landing on Nium's values.",
+    approach: "AI used iteratively as a creative collaborator across concept, lyrics, pronunciation and visuals, rather than a single one-shot generation.",
+    clever: "Each language was deliberately chosen to carry one distinct idea rather than repeating the same translated line, so non-speakers could follow the emotional arc through music alone.",
+    flags: ["Runs approximately 39 seconds, a little over the brief's 30-second guideline."]
+  },
+  {
+    team: "Group 11 - Beyond Borders",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group11-beyond-borders.mp4",
+    concept: "\"Invisible Power\" - a Hindi jingle about the unseen technology layer that quietly powers global payments (\"Nium is not the visible transaction, it is the engine behind it\").",
+    approach: "A 4-tool pipeline: ChatGPT for lyrics and translation (about 7 rounds of iteration), Suno for audio, Gemini for four cinematic video segments matched to the audio timeline, and Clipchamp for the final edit, captions and logo.",
+    clever: "Told Gemini to leave clean negative space in the final frame rather than generating a fake logo, so the real Nium logo could be composited in afterward during editing.",
+    flags: ["Original upload was a 308MB 4K file; re-encoded to 1080p for hosting with no visible quality loss at this scale."]
+  },
+  {
+    team: "Group 12 - High Five",
+    option: "A",
+    mediaType: "audio",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group12-high-five.mp3",
+    concept: "\"Go With Nium - Global Anthem\" - one message sung across six languages in sequence (English, Hindi, Punjabi, Portuguese, Spanish, Mandarin, Arabic), closing on \"One World... One Team... One Nium.\""
+  },
+  {
+    team: "Group 13 - The Matrix Minds",
+    option: "A",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group13-matrix-minds-v2.mp4",
+    concept: "\"One Beat, Many Borders\" - a tiny blue payment mascot races Malta -> Singapore -> Seoul while humans in each city are still stuck coordinating a \"quick\" global meeting across time zones; the mascot is the only one in on the joke.",
+    approach: "ChatGPT for concept and iterative prompt refinement, Gemini for three separately generated video clips, DaVinci Resolve for the edit and end card.",
+    clever: "Used each clip's final frame as the image-to-video reference for the next clip, preserving the mascot's design and motion across three separate AI generations. Also turned a generation failure (the mascot briefly duplicating) into an explicit negative constraint for later prompts: \"exactly ONE mascot - never duplicate, clone, mirror, split.\"",
     extraMedia: [
       {
         label: "Bonus second submission - \"Aankhein Khuli - Nium Version\" (10s)",
         mediaType: "video",
         mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group13-matrix-minds-aankhein-khuli.mp4",
-        notes: "\"Paisa Border Paar\" - a 90s Bollywood-romance-style jingle set to the meter of \"Aankhein Khuli\" from Mohabbatein: a man in London and a woman in Mumbai connected by a cross-border transfer \"sent with love,\" visualised as a glowing payment trail crossing a world map. Hindi lyrics: \"Aankhein khuli ho ya ho band, paisa Nium se chalta hai... London ho ya Hindustan, har dil Nium se judta hai...\" (\"Eyes open or closed, money moves with Nium... London or India, every heart connects through Nium...\"). Tagline: \"Nium - mohabbat mein aur payments mein, timing hi sab kuch hai\" (In love and in payments, timing is everything). Production: AI-assisted lyrics/melody direction written to the classic Bollywood hook's meter; video generated with Google Gemini/Veo (London skyline at golden hour, glowing payment trail across a world map, Mumbai balcony with marigold flowers); vocals performed by the team themselves and studio-polished; edited in DaVinci Resolve with subtitles and a golden-hour grade. Submitted as an additional, unprompted bonus entry alongside their main Option A submission - not a replacement for it."
+        concept: "\"Paisa Border Paar\" - a 90s Bollywood-romance jingle set to the melody of \"Aankhein Khuli\" from Mohabbatein: a cross-border payment reimagined as a long-distance love story between a man in London and a woman in Mumbai, visualised as a glowing payment trail crossing a world map.",
+        approach: "AI-assisted lyrics written to the classic melody's meter; video generated with Gemini/Veo; vocals performed by the team themselves; edited in DaVinci Resolve. Submitted as an additional bonus entry alongside their main Option A submission, not a replacement for it."
       }
     ]
-  },
+  }
 ];
 
 function esc(s) {
@@ -133,12 +232,26 @@ function mediaHtml(sub) {
   return renderMedia(sub.mediaType, sub.mediaUrl, sub.team + ' submission');
 }
 
+function notesHtml(sub) {
+  const blocks = [];
+  if (sub.concept) blocks.push(`<div class="pn-block"><span class="pn-label">Concept</span><span class="pn-text">${esc(sub.concept)}</span></div>`);
+  if (sub.approach) blocks.push(`<div class="pn-block"><span class="pn-label">Tools & approach</span><span class="pn-text">${esc(sub.approach)}</span></div>`);
+  if (sub.clever) blocks.push(`<div class="pn-block"><span class="pn-label">Clever prompting</span><span class="pn-text">${esc(sub.clever)}</span></div>`);
+  if (!blocks.length) return '';
+  return `<div class="pn-wrap">${blocks.join('')}</div>`;
+}
+
+function flagsHtml(sub) {
+  if (!sub.flags || !sub.flags.length) return '';
+  return sub.flags.map(f => `<div class="flag-box"><strong>For judges' awareness</strong>${esc(f)}</div>`).join('');
+}
+
 function extraMediaHtml(sub) {
   if (!sub.extraMedia || !sub.extraMedia.length) return '';
   return sub.extraMedia.map(ex => `
-    <div class="prompt-box" style="background:#EAF8FF;"><strong>${esc(ex.label || 'Additional submission')}</strong></div>
+    <div class="extra-label">${esc(ex.label || 'Additional submission')}</div>
     ${renderMedia(ex.mediaType, ex.mediaUrl, sub.team + ' - ' + (ex.label || 'additional submission'))}
-    ${ex.notes ? `<div class="prompt-box">${esc(ex.notes)}</div>` : ''}
+    ${notesHtml(ex)}
   `).join('');
 }
 
@@ -146,16 +259,15 @@ function scoreKey(judge, team) {
   return 'nium_leg4_scored__' + judge + '__' + team;
 }
 
+let currentJudge = '';
+
 function renderCards() {
-  const judge = document.getElementById('judgeSelect').value;
+  const judge = currentJudge;
   const container = document.getElementById('cards');
   const progressNote = document.getElementById('progressNote');
   container.innerHTML = '';
 
-  if (!judge) {
-    progressNote.textContent = 'Select your name above to start scoring.';
-    return;
-  }
+  if (!judge) return;
 
   let doneCount = 0;
   submissions.forEach((sub, idx) => {
@@ -168,7 +280,8 @@ function renderCards() {
       <div class="team-name">${idx + 1}. ${esc(sub.team)}</div>
       ${sub.option ? `<span class="option-tag">Option ${esc(sub.option)}</span>` : ''}
       ${mediaHtml(sub)}
-      ${sub.promptNotes ? `<div class="prompt-box"><strong>Prompt notes:</strong><br>${esc(sub.promptNotes)}</div>` : ''}
+      ${notesHtml(sub)}
+      ${flagsHtml(sub)}
       ${extraMediaHtml(sub)}
       <div class="score-row">
         <div class="score-field">
@@ -238,8 +351,32 @@ async function submitScore(judge, sub, idx) {
   }
 }
 
-document.getElementById('judgeSelect').addEventListener('change', renderCards);
-renderCards();
+function goToScoring() {
+  const val = document.getElementById('judgeNameInput').value.trim();
+  const errorEl = document.getElementById('nameError');
+  if (!val) {
+    errorEl.textContent = 'Please type your name to continue.';
+    return;
+  }
+  errorEl.textContent = '';
+  currentJudge = val;
+  document.getElementById('page-name').classList.add('hidden');
+  document.getElementById('page-scoring').classList.remove('hidden');
+  renderCards();
+}
+
+function backToName() {
+  document.getElementById('page-scoring').classList.add('hidden');
+  document.getElementById('page-name').classList.remove('hidden');
+  document.getElementById('judgeNameInput').value = '';
+  currentJudge = '';
+}
+
+document.getElementById('startBtn').addEventListener('click', goToScoring);
+document.getElementById('changeNameBtn').addEventListener('click', backToName);
+document.getElementById('judgeNameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') goToScoring();
+});
 </script>
 </body>
 </html>
