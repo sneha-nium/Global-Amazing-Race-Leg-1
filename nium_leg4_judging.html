@@ -18,6 +18,7 @@ select, input[type=text] { width: 100%; padding: 10px; border: 1px solid #46CCFF
 .page.hidden { display: none; }
 .page-1-box { background: #fff; border-radius: 10px; padding: 28px 24px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 button.link-btn { background: none; border: none; color: #0B0E58; text-decoration: underline; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 16px; }
+.scoring-as-badge { display: inline-block; background: #0B0E58; color: #fff; font-size: 14px; font-weight: 700; padding: 8px 16px; border-radius: 999px; margin-bottom: 14px; }
 .progress { font-size: 13px; color: #666; margin-bottom: 20px; }
 .card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .card.done { border-left: 4px solid #46CCFF; }
@@ -70,6 +71,7 @@ button.submit-btn:disabled { background: #DDD; color: #999; cursor: not-allowed;
   <div id="page-scoring" class="page hidden">
     <h1>🤖 Leg 4: AI Showdown — Judging</h1>
     <p class="subtitle">Score each team's submission below. Your scores save automatically per team.</p>
+    <div class="scoring-as-badge" id="scoringAsBadge"></div>
     <button class="link-btn" id="changeNameBtn">← Not you? Change name</button>
     <p class="progress" id="progressNote"></p>
     <div id="cards"></div>
@@ -79,7 +81,7 @@ button.submit-btn:disabled { background: #DDD; color: #999; cursor: not-allowed;
 
 <script>
 // >>> PASTE YOUR DEPLOYED APPS SCRIPT WEB APP URL HERE (ends in /exec) <<<
-const WEBAPP_URL = "PASTE_YOUR_LEG4_JUDGING_WEBAPP_URL_HERE";
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzjHIzOz0iyOjOK4xt-ATzkEJddSUBt8uPLGPIMiiOJhH2BwdyspztGIlqszmrkYqNcuA/exec";
 
 // ---------------------------------------------------------------------------
 // SUBMISSIONS DATA. Only teams that actually submitted are listed (Groups 4,
@@ -109,12 +111,20 @@ const submissions = [
   {
     team: "Group 2 - Fast & Curious",
     option: "B",
-    mediaType: "document",
-    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.pdf",
-    concept: "Solved the Ops Queue Puzzle (Ana/Ben/Chen/Dara) and submitted the AI's full step-by-step reasoning alongside its final answer.",
+    mediaType: "image",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.jpg",
+    concept: "Solved the Ops Queue Puzzle (Ana/Ben/Chen/Dara) and submitted the AI's full step-by-step reasoning alongside its final answer, laid out as a designed one-pager.",
     approach: "Gave the AI the puzzle text directly and asked it to solve it and explain its reasoning.",
     flags: [
       "The final answer table doesn't fully match the AI's own reasoning: the reasoning concludes the Ticketing Queue user cleared 18 transactions, but the table shows Ana-Ticketing Queue-25; Ben and Dara are both listed as \"Spreadsheet\" (each tool should only be used once) and no one is assigned \"Script.\" Per the brief this leg scores on clarity of the AI's reasoning, not just a correct final answer - flagged for awareness, not corrected."
+    ],
+    extraMedia: [
+      {
+        label: "Original prompt trail (text)",
+        mediaType: "document",
+        mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg4-media/leg4-group2-fast-curious.pdf",
+        concept: "The raw prompt the team typed into their AI tool, for reference alongside the designed one-pager above."
+      }
     ]
   },
   {
@@ -360,6 +370,7 @@ function goToScoring() {
   }
   errorEl.textContent = '';
   currentJudge = val;
+  document.getElementById('scoringAsBadge').textContent = '👤 Scoring as: ' + val;
   document.getElementById('page-name').classList.add('hidden');
   document.getElementById('page-scoring').classList.remove('hidden');
   renderCards();
@@ -369,6 +380,7 @@ function backToName() {
   document.getElementById('page-scoring').classList.add('hidden');
   document.getElementById('page-name').classList.remove('hidden');
   document.getElementById('judgeNameInput').value = '';
+  document.getElementById('scoringAsBadge').textContent = '';
   currentJudge = '';
 }
 
