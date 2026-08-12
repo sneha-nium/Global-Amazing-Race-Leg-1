@@ -150,15 +150,17 @@ function likedKey(team) {
 }
 
 async function loadLikes() {
-  if (!LIKES_WEBAPP_URL || LIKES_WEBAPP_URL.indexOf('PASTE_YOUR') === 0) return {};
+  if (!LIKES_WEBAPP_URL || LIKES_WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    return { ok: false, map: {}, reason: 'Backend URL not configured yet.' };
+  }
   try {
     const res = await fetch(LIKES_WEBAPP_URL);
     const data = await res.json();
     const map = {};
     (data.results || []).forEach(r => { map[r.team] = Number(r.likes) || 0; });
-    return map;
+    return { ok: true, map };
   } catch (e) {
-    return {};
+    return { ok: false, map: {}, reason: e.message };
   }
 }
 
@@ -180,7 +182,16 @@ async function sendLike(team) {
 async function render() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '<p class="subtitle">Loading submissions...</p>';
-  const likeCounts = await loadLikes();
+  const likesResult = await loadLikes();
+  const likeCounts = likesResult.map;
+
+  if (!likesResult.ok) {
+    const warn = document.createElement('div');
+    warn.className = 'error';
+    warn.textContent = 'Like counts could not be loaded right now (' + likesResult.reason + '). Submissions below are still viewable, and you can still like them - counts will catch up once this resolves. Try refreshing in a bit.';
+    document.querySelector('.wrap').insertBefore(warn, document.getElementById('grid'));
+  }
+
   grid.innerHTML = '';
 
   submissions.forEach((sub, idx) => {
