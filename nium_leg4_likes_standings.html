@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Leg 4 Showcase Likes - Live Standings</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px 64px; }
+* { box-sizing: border-box; }
+.wrap { max-width: 820px; margin: 0 auto; }
+h1 { color: #0B0E58; font-size: 26px; margin: 0 0 4px 0; }
+.subtitle { color: #666; font-size: 14px; margin: 0 0 20px 0; }
+.stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.stat-card { background: #FFFFFF; border-left: 4px solid #46CCFF; padding: 16px 20px; flex: 1; min-width: 140px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.stat-value { font-size: 28px; font-weight: 700; color: #0B0E58; }
+.stat-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #666666; margin-top: 4px; font-weight: 600; }
+.refresh-btn { background: #46CCFF; color: #0B0E58; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px; }
+.updated-note { font-size: 12px; color: #999; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+th { background: #0B0E58; color: #fff; text-align: left; padding: 10px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+td { padding: 10px 12px; border-bottom: 1px solid #EEE; font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr.rank-1 { background: #FFF9E6; }
+tr.rank-2 { background: #F5F9FF; }
+tr.rank-3 { background: #FFF4EE; }
+.rank-cell { font-weight: 700; color: #0B0E58; width: 36px; }
+.team-cell { font-weight: 600; color: #0B0E58; }
+.likes-cell { font-weight: 700; color: #0B0E58; font-size: 16px; }
+.empty { color: #666666; font-size: 14px; padding: 24px; background: #fff; text-align: center; border-radius: 6px; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+.legend { font-size: 12px; color: #999; margin-top: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>❤️ Leg 4 Showcase — Live Likes Standings</h1>
+  <p class="subtitle">Live count of employee likes on the public <a href="https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/nium_leg4_showcase.html" target="_blank" rel="noopener">Leg 4 Showcase</a> page. Refresh to pull the latest.</p>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-value" id="totalLikes">-</div><div class="stat-label">Total likes cast</div></div>
+    <div class="stat-card"><div class="stat-value" id="topTeam" style="font-size:16px;">-</div><div class="stat-label">Most-liked team</div></div>
+    <div class="stat-card"><div class="stat-value" id="teamsWithLikes">-</div><div class="stat-label">Teams with at least 1 like</div></div>
+  </div>
+
+  <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  <p class="updated-note" id="updatedNote"></p>
+  <div id="error-container"></div>
+  <div id="tableWrap"></div>
+
+  <p class="legend">This is a fan-favourite count, separate from the judges' scoring on Leg 4. Teams with zero likes so far are still shown at the bottom so you can see full participation.</p>
+</div>
+
+<script>
+const LIKES_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby0OsC7pyFpTjaBvOiFe5tqObhb99a1XcHmjFF0f7QS4p8igbUK2seXDR16k4jN7VqxUA/exec";
+
+// Keep in sync with the team list in nium_leg4_showcase.html, so teams with
+// zero likes still show up (rather than silently disappearing).
+const TEAMS = [
+  "Group 1 - Mindful Navigators",
+  "Group 2 - Fast & Curious",
+  "Group 3 - The Borderless Brigade",
+  "Group 7 - The Nium Hokages",
+  "Group 8 - We Need Therapy",
+  "Group 9 - Smartinis",
+  "Group 10 - Innov Agents",
+  "Group 11 - Beyond Borders",
+  "Group 12 - High Five",
+  "Group 13 - The Matrix Minds"
+];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadStandings() {
+  const tableWrap = document.getElementById('tableWrap');
+  const errorContainer = document.getElementById('error-container');
+  errorContainer.innerHTML = '';
+  tableWrap.innerHTML = '<p class="subtitle">Loading...</p>';
+
+  if (!LIKES_WEBAPP_URL || LIKES_WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    errorContainer.innerHTML = '<div class="error">Backend URL not configured yet - paste the deployed Apps Script Web App URL into LIKES_WEBAPP_URL at the top of this file.</div>';
+    tableWrap.innerHTML = '';
+    return;
+  }
+
+  try {
+    const res = await fetch(LIKES_WEBAPP_URL);
+    const data = await res.json();
+    const likesByTeam = {};
+    (data.results || []).forEach(r => { likesByTeam[r.team] = Number(r.likes) || 0; });
+
+    const standings = TEAMS.map(team => ({ team, likes: likesByTeam[team] || 0 }))
+      .sort((a, b) => b.likes - a.likes);
+
+    const totalLikes = standings.reduce((s, r) => s + r.likes, 0);
+    document.getElementById('totalLikes').textContent = totalLikes;
+    document.getElementById('teamsWithLikes').textContent = standings.filter(r => r.likes > 0).length + ' / ' + TEAMS.length;
+    document.getElementById('topTeam').textContent = totalLikes > 0 ? standings[0].team : '-';
+
+    let html = '<table><thead><tr><th class="rank">#</th><th>Team</th><th>Likes</th></tr></thead><tbody>';
+    standings.forEach((r, i) => {
+      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+      html += `<tr class="${rankClass}">
+        <td class="rank-cell">${i + 1}</td>
+        <td class="team-cell">${esc(r.team)}</td>
+        <td class="likes-cell">${r.likes}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    tableWrap.innerHTML = html;
+
+    document.getElementById('updatedNote').textContent = 'Last updated: ' + new Date().toLocaleString();
+  } catch (err) {
+    errorContainer.innerHTML = `<div class="error">Could not load like counts (${esc(err.message)}). Check the backend URL and try refreshing.</div>`;
+    tableWrap.innerHTML = '';
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadStandings);
+loadStandings();
+</script>
+</body>
+</html>
