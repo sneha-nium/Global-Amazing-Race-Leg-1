@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Leg 4 Live Standings</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px 64px; }
+* { box-sizing: border-box; }
+.wrap { max-width: 820px; margin: 0 auto; }
+h1 { color: #0B0E58; font-size: 26px; margin: 0 0 4px 0; }
+.subtitle { color: #666; font-size: 14px; margin: 0 0 20px 0; }
+.refresh-btn { background: #46CCFF; color: #0B0E58; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px; }
+.updated-note { font-size: 12px; color: #999; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+th { background: #0B0E58; color: #fff; text-align: left; padding: 10px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+td { padding: 10px 12px; border-bottom: 1px solid #EEE; font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr.rank-1 { background: #FFF9E6; }
+tr.rank-2 { background: #F5F9FF; }
+tr.rank-3 { background: #FFF4EE; }
+.rank-cell { font-weight: 700; color: #0B0E58; width: 36px; }
+.team-cell { font-weight: 600; color: #0B0E58; }
+.total-cell { font-weight: 700; color: #0B0E58; font-size: 16px; }
+.sub-note { font-size: 11px; color: #999; }
+.judges-cell { font-size: 12px; color: #666; }
+.pending-tag { display: inline-block; background: #FFF7E6; color: #7A5B00; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+.legend { font-size: 12px; color: #999; margin-top: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏆 Leg 4: AI Showdown — Live Judging Standings</h1>
+  <p class="subtitle">Live totals as judges submit scores. Refresh to pull the latest.</p>
+  <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  <p class="updated-note" id="updatedNote"></p>
+  <div id="tableWrap"></div>
+  <p class="legend">
+    Total = Completion (10 pts, flat, awarded for a full submission) + average Creativity across judges who've scored (out of 5) + average Clever Prompting across judges who've scored (out of 5), out of 20 max.<br>
+    Judges column shows every name that has scored so far, out of an expected panel of 4.
+  </p>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzjHIzOz0iyOjOK4xt-ATzkEJddSUBt8uPLGPIMiiOJhH2BwdyspztGIlqszmrkYqNcuA/exec";
+// Judges type their own name freely on the judging page, so we can't match
+// against a fixed list of first names (that was the bug - "Spencer Hanlon"
+// never matched "Spencer" and got silently dropped). Count whoever actually
+// submitted a score instead, and just use this as the expected panel size
+// for the "x/4" display.
+const EXPECTED_JUDGE_COUNT = 4;
+
+// Teams that submitted for Leg 4 - all get the flat 10-point completion
+// award (Comms-Lead assigned, not judge-scored). Keep in sync with the
+// judging page's team list.
+const TEAMS = [
+  "Group 1 - Mindful Navigators",
+  "Group 2 - Fast & Curious",
+  "Group 3 - The Borderless Brigade",
+  "Group 7 - The Nium Hokages",
+  "Group 8 - We Need Therapy",
+  "Group 9 - Smartinis",
+  "Group 10 - Innov Agents",
+  "Group 11 - Beyond Borders",
+  "Group 12 - High Five",
+  "Group 13 - The Matrix Minds"
+];
+const COMPLETION_POINTS = 10;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadStandings() {
+  const tableWrap = document.getElementById('tableWrap');
+  const updatedNote = document.getElementById('updatedNote');
+  tableWrap.innerHTML = '<p class="subtitle">Loading...</p>';
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    tableWrap.innerHTML = '<div class="error">Backend URL not configured.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(WEBAPP_URL);
+    const data = await res.json();
+    const rows = data.results || [];
+
+    // Aggregate: for each team, collect each judge's latest score.
+    const byTeam = {};
+    TEAMS.forEach(t => byTeam[t] = {});
+    rows.forEach(r => {
+      if (!byTeam[r.team]) byTeam[r.team] = {};
+      byTeam[r.team][r.judge] = { creativity: Number(r.creativity) || 0, prompting: Number(r.prompting) || 0 };
+    });
+
+    const standings = TEAMS.map(team => {
+      const scores = byTeam[team] || {};
+      const judgesScored = Object.keys(scores).filter(j => j && j.trim());
+      const n = judgesScored.length;
+      const avgCreativity = n ? judgesScored.reduce((s, j) => s + scores[j].creativity, 0) / n : 0;
+      const avgPrompting = n ? judgesScored.reduce((s, j) => s + scores[j].prompting, 0) / n : 0;
+      const total = COMPLETION_POINTS + avgCreativity + avgPrompting;
+      return { team, judgesScored, n, avgCreativity, avgPrompting, total };
+    });
+
+    standings.sort((a, b) => b.total - a.total);
+
+    let html = '<table><thead><tr><th>#</th><th>Team</th><th>Completion</th><th>Avg Creativity</th><th>Avg Prompting</th><th>Total (/20)</th><th>Judges Scored</th></tr></thead><tbody>';
+    standings.forEach((s, idx) => {
+      const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+      const judgesDisplay = s.n
+        ? esc(s.judgesScored.join(', ')) + ` <span class="sub-note">(${s.n}/${EXPECTED_JUDGE_COUNT})</span>`
+        : '<span class="pending-tag">Awaiting scores</span>';
+      html += `<tr class="${rankClass}">
+        <td class="rank-cell">${idx + 1}</td>
+        <td class="team-cell">${esc(s.team)}</td>
+        <td>${COMPLETION_POINTS}</td>
+        <td>${s.n ? s.avgCreativity.toFixed(1) : '-'}</td>
+        <td>${s.n ? s.avgPrompting.toFixed(1) : '-'}</td>
+        <td class="total-cell">${s.total.toFixed(1)}</td>
+        <td class="judges-cell">${judgesDisplay}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    tableWrap.innerHTML = html;
+    updatedNote.textContent = 'Last updated: ' + new Date().toLocaleString();
+  } catch (err) {
+    tableWrap.innerHTML = `<div class="error">Could not load standings (${esc(err.message)}). Check the backend URL and try refreshing.</div>`;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadStandings);
+loadStandings();
+</script>
+</body>
+</html>
