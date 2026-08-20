@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Leg 5 Judging</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px 64px; }
+* { box-sizing: border-box; }
+.wrap { max-width: 720px; margin: 0 auto; }
+h1 { color: #0B0E58; font-size: 26px; margin: 0 0 4px 0; }
+.subtitle { color: #666; font-size: 14px; margin: 0 0 24px 0; }
+.judge-select { background: #fff; border: 1px solid #DDD; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+.judge-select label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0B0E58; display: block; margin-bottom: 8px; }
+select, input[type=text] { width: 100%; padding: 10px; border: 1px solid #46CCFF; border-radius: 6px; font-size: 15px; font-family: inherit; }
+.page { }
+.page.hidden { display: none; }
+.page-1-box { background: #fff; border-radius: 10px; padding: 28px 24px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+button.link-btn { background: none; border: none; color: #0B0E58; text-decoration: underline; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 16px; }
+.scoring-as-badge { display: inline-block; background: #0B0E58; color: #fff; font-size: 14px; font-weight: 700; padding: 8px 16px; border-radius: 999px; margin-bottom: 14px; }
+.progress { font-size: 13px; color: #666; margin-bottom: 20px; }
+.card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #E5E5E5; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.card.done { border-left: 4px solid #46CCFF; }
+.team-name { color: #0B0E58; font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
+.theme-tag { display: inline-block; background: #EAF8FF; color: #0B0E58; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+.bonus-tag { display: inline-block; background: #FFF4E6; color: #B25900; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; margin-left: 6px; }
+.media-box { margin: 12px 0; }
+.media-box img, .media-box video { max-width: 100%; border-radius: 6px; display: block; max-height: 500px; margin: 0 auto; }
+.media-box audio { width: 100%; }
+.media-link { display: inline-block; background: #0B0E58; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; margin: 8px 0; }
+.no-submission { color: #999; font-style: italic; padding: 16px; text-align: center; background: #FAFAFA; border-radius: 6px; }
+.pn-wrap { background: #F9F9FB; border-radius: 6px; padding: 12px 14px; margin: 10px 0; }
+.pn-block { margin: 0 0 10px 0; }
+.pn-block:last-child { margin-bottom: 0; }
+.pn-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0B0E58; margin-bottom: 3px; }
+.pn-text { font-size: 13px; color: #444; line-height: 1.5; }
+.score-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.score-field { flex: 1; min-width: 130px; }
+.score-field label { font-size: 12px; font-weight: 700; color: #0B0E58; display: block; margin-bottom: 4px; }
+.score-field input[type=number] { width: 100%; padding: 8px; border: 1px solid #CCC; border-radius: 6px; font-size: 15px; }
+textarea { width: 100%; padding: 8px; border: 1px solid #CCC; border-radius: 6px; font-size: 13px; font-family: inherit; margin-top: 10px; min-height: 50px; resize: vertical; }
+button.submit-btn { margin-top: 14px; background: #46CCFF; color: #0B0E58; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+button.submit-btn:disabled { background: #DDD; color: #999; cursor: not-allowed; }
+.status-msg { font-size: 12px; margin-top: 8px; }
+.status-ok { color: #0B8A3D; }
+.status-err { color: #B00030; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- PAGE 1: name entry -->
+  <div id="page-name" class="page">
+    <h1>🎬 Leg 5: Creative Grand Finale — Judging</h1>
+    <p class="subtitle">Score each team's Leg 5 video. Your scores save automatically per team.</p>
+    <div class="page-1-box">
+      <div class="judge-select">
+        <label>Your name</label>
+        <input type="text" id="judgeNameInput" placeholder="Type your full name" autocomplete="off">
+      </div>
+      <button class="submit-btn" id="startBtn">Start Judging</button>
+      <p class="status-msg status-err" id="nameError"></p>
+    </div>
+  </div>
+
+  <!-- PAGE 2: scoring cards -->
+  <div id="page-scoring" class="page hidden">
+    <h1>🎬 Leg 5: Creative Grand Finale — Judging</h1>
+    <p class="subtitle">Score each team's submission below. Your scores save automatically per team.</p>
+    <div class="scoring-as-badge" id="scoringAsBadge"></div>
+    <button class="link-btn" id="changeNameBtn">← Not you? Change name</button>
+    <p class="progress" id="progressNote"></p>
+    <div id="cards"></div>
+  </div>
+
+</div>
+
+<script>
+// >>> PASTE YOUR DEPLOYED APPS SCRIPT WEB APP URL HERE (ends in /exec) <<<
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzdIlnj_exGBOGRkc2r3rQSH5E6qJOrunzsgRMFbTmbkR5JLxO59x-_SWxoI-XHbO1o/exec";
+
+// ---------------------------------------------------------------------------
+// SUBMISSIONS DATA. Only teams that have actually submitted for Leg 5 are
+// listed here - add more entries as videos come in.
+//
+// Each entry:
+//   team, theme (which of the 4 Leg 5 options they picked, or "Wildcard"),
+//   mediaType ("video"|"image"|"audio"|"document"), mediaUrl,
+//   concept (optional - what the video is about),
+//   bonusEligible (true if submitted on the original 17 Aug deadline day,
+//   before the 1-day extension - earns the flat +5 "today bonus" on the
+//   live standings page, not judge-scored).
+// ---------------------------------------------------------------------------
+const submissions = [
+  {
+    team: "Group 2 - Fast & Curious",
+    theme: "Wildcard",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg5-media/leg5-group2-fast-curious.mp4",
+    concept: "\"At Nium, we are secret agents making money move!\" The ball, cards, mug, and dominoes represent different currencies being passed across borders and between currencies. The London-Mumbai table-tennis exchange represents cross-border payments literally moving between markets. Team's own framing: \"Different currencies, different offices, one team!\"",
+    bonusEligible: true
+  },
+  {
+    team: "Group 3 - The Borderless Brigade",
+    theme: "",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg5-media/leg5-group3-borderless-brigade.mp4",
+    concept: "",
+    bonusEligible: false
+  },
+  {
+    team: "Group 9 - Smartinis",
+    theme: "",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg5-media/leg5-group9-smartinis.mp4",
+    concept: "A mockumentary-style launch day: one payment issue \"follows the sun\" across Mumbai and San Francisco, showing how global teamwork keeps things moving even when plans change last minute. Milou and Sanved couldn't join in person, so the team included them as async/remote support - framed as real cross-region teamwork at Nium (relevant for the Teamwork & Inclusion criterion even though they're not physically present).",
+    bonusEligible: false
+  },
+  {
+    team: "Group 11 - Beyond Borders",
+    theme: "",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg5-media/leg5-group11-beyond-borders.mp4",
+    concept: "A fun take on the chaos that unfolds on a day-to-day Zoom call where teams come together to process a payment - one emergency after another, with a few unexpected twists along the way. What looks like pure Zoom chaos is actually a payment journey that brings the whole organisation together, across teams and borders. Team's own framing: \"At Nium, we make money move.\"",
+    bonusEligible: true
+  },
+  {
+    team: "Group 13 - The Matrix Minds",
+    theme: "",
+    mediaType: "video",
+    mediaUrl: "https://sneha-nium.github.io/Global-Amazing-Race-Leg-1/leg5-media/leg5-group13-matrix-minds.mp4",
+    concept: "One payment, 5 agents, multiple time zones, a few unexpected obstacles, and one very determined blue mascot. A mini spy-comedy mission with handoffs across locations, a virtual mission-control agent, urgent alerts, and one final push to get the payment across the finish line. The blue mascot is a deliberate callback to their Leg 4 submission, carrying the story into the finale. Team's own framing: \"Different time zones. One team. One flow.\"",
+    bonusEligible: true
+  }
+];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderMedia(mediaType, mediaUrl, altText) {
+  if (mediaType === 'image') {
+    return `<div class="media-box"><img src="${esc(mediaUrl)}" alt="${esc(altText)}"></div>`;
+  }
+  if (mediaType === 'video') {
+    return `<div class="media-box"><video controls src="${esc(mediaUrl)}"></video></div>`;
+  }
+  if (mediaType === 'audio') {
+    return `<div class="media-box"><audio controls src="${esc(mediaUrl)}"></audio></div>`;
+  }
+  return `<div class="media-box"><a class="media-link" href="${esc(mediaUrl)}" target="_blank" rel="noopener">View submission ↗</a></div>`;
+}
+
+function mediaHtml(sub) {
+  if (!sub.mediaUrl) {
+    return '<div class="no-submission">No submission on file yet for this team.</div>';
+  }
+  return renderMedia(sub.mediaType, sub.mediaUrl, sub.team + ' submission');
+}
+
+function notesHtml(sub) {
+  if (!sub.concept) return '';
+  return `<div class="pn-wrap"><div class="pn-block"><span class="pn-label">Concept</span><span class="pn-text">${esc(sub.concept)}</span></div></div>`;
+}
+
+function scoreKey(judge, team) {
+  return 'nium_leg5_scored__' + judge + '__' + team;
+}
+
+let currentJudge = '';
+
+function renderCards() {
+  const judge = currentJudge;
+  const container = document.getElementById('cards');
+  const progressNote = document.getElementById('progressNote');
+  container.innerHTML = '';
+
+  if (!judge) return;
+
+  let doneCount = 0;
+  submissions.forEach((sub, idx) => {
+    const already = localStorage.getItem(scoreKey(judge, sub.team));
+    if (already) doneCount++;
+
+    const card = document.createElement('div');
+    card.className = 'card' + (already ? ' done' : '');
+    card.innerHTML = `
+      <div class="team-name">${idx + 1}. ${esc(sub.team)}</div>
+      ${sub.theme ? `<span class="theme-tag">${esc(sub.theme)}</span>` : ''}
+      ${mediaHtml(sub)}
+      ${notesHtml(sub)}
+      <div class="score-row">
+        <div class="score-field">
+          <label>Creativity (0-10)</label>
+          <input type="number" min="0" max="10" step="1" id="creativity-${idx}">
+        </div>
+        <div class="score-field">
+          <label>Teamwork & Inclusion (0-7)</label>
+          <input type="number" min="0" max="7" step="1" id="teamwork-${idx}">
+        </div>
+        <div class="score-field">
+          <label>Production Effort (0-5)</label>
+          <input type="number" min="0" max="5" step="1" id="production-${idx}">
+        </div>
+        <div class="score-field">
+          <label>Humour (0-3)</label>
+          <input type="number" min="0" max="3" step="1" id="humour-${idx}">
+        </div>
+      </div>
+      <textarea placeholder="Optional note (e.g. highlight reel flag)" id="notes-${idx}"></textarea>
+      <div>
+        <button class="submit-btn" id="submit-${idx}" ${!sub.mediaUrl ? 'disabled' : ''}>
+          ${already ? 'Update Score' : 'Submit Score'}
+        </button>
+        <span class="status-msg" id="status-${idx}"></span>
+      </div>
+    `;
+    container.appendChild(card);
+
+    document.getElementById(`submit-${idx}`).addEventListener('click', () => submitScore(judge, sub, idx));
+  });
+
+  progressNote.textContent = `${judge}: ${doneCount} of ${submissions.length} teams scored.`;
+}
+
+async function submitScore(judge, sub, idx) {
+  const creativity = document.getElementById(`creativity-${idx}`).value;
+  const teamwork = document.getElementById(`teamwork-${idx}`).value;
+  const production = document.getElementById(`production-${idx}`).value;
+  const humour = document.getElementById(`humour-${idx}`).value;
+  const notes = document.getElementById(`notes-${idx}`).value;
+  const statusEl = document.getElementById(`status-${idx}`);
+
+  if (creativity === '' || teamwork === '' || production === '' || humour === '') {
+    statusEl.textContent = 'Enter all four scores before submitting.';
+    statusEl.className = 'status-msg status-err';
+    return;
+  }
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    statusEl.textContent = 'Backend not configured yet - contact your Comms Lead.';
+    statusEl.className = 'status-msg status-err';
+    return;
+  }
+
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'status-msg';
+
+  try {
+    const res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        judge, team: sub.team,
+        creativity: Number(creativity), teamwork: Number(teamwork),
+        production: Number(production), humour: Number(humour),
+        notes
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      localStorage.setItem(scoreKey(judge, sub.team), '1');
+      statusEl.textContent = 'Saved!';
+      statusEl.className = 'status-msg status-ok';
+      renderCards();
+    } else {
+      throw new Error(data.message || 'unknown error');
+    }
+  } catch (err) {
+    statusEl.textContent = 'Could not save (' + err.message + '). Try again or screenshot this and send to your Comms Lead.';
+    statusEl.className = 'status-msg status-err';
+  }
+}
+
+function goToScoring() {
+  const val = document.getElementById('judgeNameInput').value.trim();
+  const errorEl = document.getElementById('nameError');
+  if (!val) {
+    errorEl.textContent = 'Please type your name to continue.';
+    return;
+  }
+  errorEl.textContent = '';
+  currentJudge = val;
+  document.getElementById('scoringAsBadge').textContent = '👤 Scoring as: ' + val;
+  document.getElementById('page-name').classList.add('hidden');
+  document.getElementById('page-scoring').classList.remove('hidden');
+  renderCards();
+}
+
+function backToName() {
+  document.getElementById('page-scoring').classList.add('hidden');
+  document.getElementById('page-name').classList.remove('hidden');
+  document.getElementById('judgeNameInput').value = '';
+  document.getElementById('scoringAsBadge').textContent = '';
+  currentJudge = '';
+}
+
+document.getElementById('startBtn').addEventListener('click', goToScoring);
+document.getElementById('changeNameBtn').addEventListener('click', backToName);
+document.getElementById('judgeNameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') goToScoring();
+});
+</script>
+</body>
+</html>

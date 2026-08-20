@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nium Amazing Race - Leg 5 Live Standings</title>
+<style>
+html, body { margin: 0; padding: 0; }
+body { background: #F5F5F5; color: #3A3A3A; font-family: 'Segoe UI', Arial, sans-serif; padding: 24px 16px 64px; }
+* { box-sizing: border-box; }
+.wrap { max-width: 860px; margin: 0 auto; }
+h1 { color: #0B0E58; font-size: 26px; margin: 0 0 4px 0; }
+.subtitle { color: #666; font-size: 14px; margin: 0 0 20px 0; }
+.refresh-btn { background: #46CCFF; color: #0B0E58; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px; }
+.updated-note { font-size: 12px; color: #999; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+th { background: #0B0E58; color: #fff; text-align: left; padding: 10px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+td { padding: 10px 12px; border-bottom: 1px solid #EEE; font-size: 14px; }
+tr:last-child td { border-bottom: none; }
+tr.rank-1 { background: #FFF9E6; }
+tr.rank-2 { background: #F5F9FF; }
+tr.rank-3 { background: #FFF4EE; }
+.rank-cell { font-weight: 700; color: #0B0E58; width: 36px; }
+.team-cell { font-weight: 600; color: #0B0E58; }
+.total-cell { font-weight: 700; color: #0B0E58; font-size: 16px; }
+.sub-note { font-size: 11px; color: #999; }
+.judges-cell { font-size: 12px; color: #666; }
+.bonus-badge { display: inline-block; background: #FFF4E6; color: #B25900; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+.pending-tag { display: inline-block; background: #FFF7E6; color: #7A5B00; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.error { background: #FFF4F4; border: 1px solid #F7246C; color: #B00030; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; border-radius: 6px; }
+.legend { font-size: 12px; color: #999; margin-top: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎬 Leg 5: Creative Grand Finale — Live Judging Standings</h1>
+  <p class="subtitle">Live totals as judges submit scores. Refresh to pull the latest.</p>
+  <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  <p class="updated-note" id="updatedNote"></p>
+  <div id="error-container"></div>
+  <div id="tableWrap"></div>
+  <p class="legend">
+    Total = average Creativity (out of 10) + average Teamwork & Inclusion (out of 7) + average Production Effort (out of 5) + average Humour (out of 3) across judges who've scored, out of 25 max - plus a flat +5 "today bonus" for teams that submitted on the original 17 August deadline, ahead of the 1-day extension (out of 30 max for those teams).<br>
+    Judges column shows every name that has scored so far, out of an expected panel of 4.
+  </p>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzdIlnj_exGBOGRkc2r3rQSH5E6qJOrunzsgRMFbTmbkR5JLxO59x-_SWxoI-XHbO1o/exec";
+const EXPECTED_JUDGE_COUNT = 4;
+const TODAY_BONUS_POINTS = 5;
+
+// Teams that have submitted for Leg 5 so far - add more as videos come in.
+// bonusEligible must match the judging page's submissions data (true = they
+// submitted on the original 17 Aug deadline, before the 1-day extension).
+const TEAMS = [
+  { team: "Group 2 - Fast & Curious", bonusEligible: true },
+  { team: "Group 3 - The Borderless Brigade", bonusEligible: false },
+  { team: "Group 9 - Smartinis", bonusEligible: false },
+  { team: "Group 11 - Beyond Borders", bonusEligible: true },
+  { team: "Group 13 - The Matrix Minds", bonusEligible: true }
+];
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadStandings() {
+  const tableWrap = document.getElementById('tableWrap');
+  const errorContainer = document.getElementById('error-container');
+  const updatedNote = document.getElementById('updatedNote');
+  errorContainer.innerHTML = '';
+  tableWrap.innerHTML = '<p class="subtitle">Loading...</p>';
+
+  if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
+    errorContainer.innerHTML = '<div class="error">Backend URL not configured yet - paste the deployed Apps Script Web App URL into WEBAPP_URL at the top of this file.</div>';
+    tableWrap.innerHTML = '';
+    return;
+  }
+
+  try {
+    const res = await fetch(WEBAPP_URL);
+    const data = await res.json();
+    const rows = data.results || [];
+
+    const byTeam = {};
+    TEAMS.forEach(t => byTeam[t.team] = {});
+    rows.forEach(r => {
+      if (!byTeam[r.team]) byTeam[r.team] = {};
+      byTeam[r.team][r.judge] = {
+        creativity: Number(r.creativity) || 0,
+        teamwork: Number(r.teamwork) || 0,
+        production: Number(r.production) || 0,
+        humour: Number(r.humour) || 0
+      };
+    });
+
+    const standings = TEAMS.map(t => {
+      const scores = byTeam[t.team] || {};
+      const judgesScored = Object.keys(scores).filter(j => j && j.trim());
+      const n = judgesScored.length;
+      const avg = (key) => n ? judgesScored.reduce((s, j) => s + scores[j][key], 0) / n : 0;
+      const avgCreativity = avg('creativity');
+      const avgTeamwork = avg('teamwork');
+      const avgProduction = avg('production');
+      const avgHumour = avg('humour');
+      const bonus = t.bonusEligible ? TODAY_BONUS_POINTS : 0;
+      const total = avgCreativity + avgTeamwork + avgProduction + avgHumour + bonus;
+      return { team: t.team, bonus, judgesScored, n, avgCreativity, avgTeamwork, avgProduction, avgHumour, total };
+    });
+
+    standings.sort((a, b) => b.total - a.total);
+
+    let html = '<table><thead><tr><th>#</th><th>Team</th><th>Avg Creativity</th><th>Avg Teamwork</th><th>Avg Production</th><th>Avg Humour</th><th>Bonus</th><th>Total</th><th>Judges Scored</th></tr></thead><tbody>';
+    standings.forEach((s, idx) => {
+      const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+      const judgesDisplay = s.n
+        ? esc(s.judgesScored.join(', ')) + ` <span class="sub-note">(${s.n}/${EXPECTED_JUDGE_COUNT})</span>`
+        : '<span class="pending-tag">Awaiting scores</span>';
+      const bonusBadge = s.bonus > 0 ? `<span class="bonus-badge">+${s.bonus} today</span>` : '';
+      html += `<tr class="${rankClass}">
+        <td class="rank-cell">${idx + 1}</td>
+        <td class="team-cell">${esc(s.team)}</td>
+        <td>${s.n ? s.avgCreativity.toFixed(1) : '-'}</td>
+        <td>${s.n ? s.avgTeamwork.toFixed(1) : '-'}</td>
+        <td>${s.n ? s.avgProduction.toFixed(1) : '-'}</td>
+        <td>${s.n ? s.avgHumour.toFixed(1) : '-'}</td>
+        <td>${s.bonus}${bonusBadge}</td>
+        <td class="total-cell">${s.total.toFixed(1)}</td>
+        <td class="judges-cell">${judgesDisplay}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    tableWrap.innerHTML = html;
+    updatedNote.textContent = 'Last updated: ' + new Date().toLocaleString();
+  } catch (err) {
+    errorContainer.innerHTML = `<div class="error">Could not load standings (${esc(err.message)}). Check the backend URL and try refreshing.</div>`;
+    tableWrap.innerHTML = '';
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadStandings);
+loadStandings();
+</script>
+</body>
+</html>
