@@ -239,6 +239,18 @@ async function submitScore(judge, sub, idx) {
     return;
   }
 
+  // The HTML min/max attributes only affect the spinner arrows - browsers
+  // still let you type any number in, so validate the actual range here.
+  const limits = { creativity: 10, teamwork: 7, production: 5, humour: 3 };
+  const values = { creativity: Number(creativity), teamwork: Number(teamwork), production: Number(production), humour: Number(humour) };
+  for (const key in limits) {
+    if (!Number.isInteger(values[key]) || values[key] < 0 || values[key] > limits[key]) {
+      statusEl.textContent = `${key.charAt(0).toUpperCase() + key.slice(1)} must be a whole number between 0 and ${limits[key]}.`;
+      statusEl.className = 'status-msg status-err';
+      return;
+    }
+  }
+
   if (!WEBAPP_URL || WEBAPP_URL.indexOf('PASTE_YOUR') === 0) {
     statusEl.textContent = 'Backend not configured yet - contact your Comms Lead.';
     statusEl.className = 'status-msg status-err';
